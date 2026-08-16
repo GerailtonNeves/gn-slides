@@ -1633,10 +1633,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${message}</span>`;
     container.appendChild(toast);
-
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  }
+
   // --- PWA SERVICE WORKER & APP INSTALL PROMPT HANDLER ---
   let deferredPWAInstallPrompt = null;
   const btnInstallPWA = document.getElementById('btn-install-pwa');
