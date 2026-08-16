@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GN SLIDES PRO 4K - Estúdio de Slideshows & Vídeos MP4</title>
+  <!-- SEO & Social Meta Tags -->
+  <meta name="description" content="GN SLIDES PRO - Crie slideshows em 4K Ultra HD com abertura, encerramento, fotos inteiras, transições variadas e música de alta qualidade para exportar em MP4.">
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Main CSS File -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gradient">
+  <div id="app" class="app-container">
+    
+    <!-- TOP HEADER NAVBAR -->
+    <header class="navbar glass-nav">
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-bolt-lightning"></i>
+        </div>
+        <div class="logo-text">
+          <h1>GN SLIDES <span class="badge-pro" id="pro-header-badge">PRO 4K</span></h1>
+        </div>
+      </div>
+
+      <!-- Quick Project Toolbar & User Account -->
+      <div class="header-actions">
+        <!-- User Profile Widget -->
+        <div id="user-profile-badge" class="btn btn-secondary" style="gap:6px;">
+          <i class="fa-solid fa-circle-user text-orange"></i>
+          <span id="user-name-display">Visitante</span>
+          <button id="btn-open-auth" class="btn btn-xs btn-blue-outline">Entrar</button>
+          <button id="btn-logout" class="btn-xs btn-danger-outline hidden" title="Sair da Conta"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+
+        <button id="btn-activate-license" class="btn btn-secondary" title="Ativar Licença PRO">
+          <i class="fa-solid fa-key text-yellow"></i> <span id="license-badge-text">Ativar PRO</span>
+        </button>
+        <button id="btn-new-project" class="btn btn-secondary" title="Novo Projeto">
+          <i class="fa-solid fa-file-circle-plus"></i> Novo
+        </button>
+        <button id="btn-save-project" class="btn btn-secondary" title="Salvar Projeto no Navegador">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar
+        </button>
+        <button id="btn-load-project" class="btn btn-secondary" title="Meus Projetos Salvos">
+          <i class="fa-solid fa-folder-open"></i> Projetos
+        </button>
+        <button id="btn-demo-project" class="btn btn-blue-outline" title="Carregar Exemplo de Demonstração">
+          <i class="fa-solid fa-play"></i> Exemplo Pronto
+        </button>
+        <button id="btn-share-project" class="btn btn-secondary" title="Compartilhar">
+          <i class="fa-solid fa-share-nodes"></i> Compartilhar
+        </button>
+        <button id="btn-export-video" class="btn btn-orange-gradient btn-glow" title="Gerar Vídeo MP4 em 4K">
+          <i class="fa-solid fa-download"></i> Baixar MP4 4K
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN WORKSPACE LAYOUT -->
+    <main class="workspace-grid">
+      
+      <!-- LEFT SIDEBAR: CONTROLS & MEDIA MANAGER -->
+      <aside class="sidebar glass-card">
+        <!-- Sidebar Navigation Tabs -->
+        <nav class="sidebar-tabs">
+          <button class="tab-btn active" data-tab="tab-photos">
+            <i class="fa-solid fa-images"></i>
+            <span>Fotos</span>
+            <span id="photo-count-badge" class="count-pill">0</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-text">
+            <i class="fa-solid fa-heading"></i>
+            <span>Textos & Telas</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-music">
+            <i class="fa-solid fa-music"></i>
+            <span>Música</span>
+            <span id="music-count-badge" class="count-pill">0</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-effects">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Transições & 4K</span>
+          </button>
+        </nav>
+
+        <!-- TAB CONTENT 1: PHOTOS -->
+        <div id="tab-photos" class="tab-pane active">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-photo-film text-cyan"></i> Fotos do Slideshow</h3>
+            <span class="info-text">Upload de fotos ou escolha um modelo pronto</span>
+          </div>
+
+          <!-- Quick Templates Bar -->
+          <div class="form-section-box margin-bottom-xs">
+            <label><i class="fa-solid fa-wand-magic-sparkles text-cyan"></i> Modelos Prontos por Tema:</label>
+            <select id="select-preset-template" class="form-select">
+              <option value="church">⛪ Igreja & Eventos Religiosos (Capela Santa Inês)</option>
+              <option value="wedding">💍 Casamento & Amor Inesquecível</option>
+              <option value="birthday">🎂 Aniversário & Festas Especiais</option>
+              <option value="memorial">🕊️ Homenagem Póstuma & Saudades Eternas</option>
+              <option value="business">💼 Comercial, Lojas & Lançamentos Imobiliários</option>
+            </select>
+          </div>
+
+          <!-- Slide Duration Selector Box (Tempo das Fotos) -->
+          <div class="form-section-box margin-bottom-xs">
+            <label><i class="fa-solid fa-stopwatch text-orange"></i> Tempo de Exibição de Cada Foto:</label>
+            <select id="select-slide-duration-preset" class="form-select">
+              <option value="1.5">⚡ 1.5 Segundos por Foto (Slideshow Rápido)</option>
+              <option value="2">⏱️ 2.0 Segundos por Foto (Rápido / Animado)</option>
+              <option value="2.5">⏱️ 2.5 Segundos por Foto</option>
+              <option value="3">⏱️ 3.0 Segundos por Foto (Equilibrado)</option>
+              <option value="3.5" selected>⏱️ 3.5 Segundos por Foto (Padrão Recomendado)</option>
+              <option value="4">⏱️ 4.0 Segundos por Foto</option>
+              <option value="5">⏱️ 5.0 Segundos por Foto (Leitura Tranquila)</option>
+              <option value="10">⏱️ 10.0 Segundos por Foto (Apresentação Longa)</option>
+              <option value="custom">✏️ Personalizado (Digitar valor)</option>
+            </select>
+
+            <div id="custom-slide-duration-box" class="slider-with-val hidden margin-top-xs">
+              <label>Tempo exato:</label>
+              <input type="number" id="input-custom-slide-duration-val" min="0.5" max="60" step="0.1" value="3.5" class="form-input" style="width:100px;">
+              <span>segundos</span>
+            </div>
+
+            <button id="btn-apply-duration-all" class="btn btn-blue-outline btn-xs margin-top-xs">
+              <i class="fa-solid fa-check-double"></i> Aplicar Tempo a Todas as Fotos
+            </button>
+          </div>
+
+          <!-- Drag & Drop Upload Zone -->
+          <div id="drop-zone-photos" class="upload-dropzone">
+            <input type="file" id="input-upload-photos" multiple accept="image/*" class="file-input-hidden">
+            <div class="dropzone-content">
+              <div class="drop-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <p class="drop-title">Arraste suas fotos aqui</p>
+              <p class="drop-sub">ou <span class="link-highlight">clique para buscar</span> no computador</p>
+              <span class="file-types">Suporta JPG, PNG, WEBP em Alta Resolução</span>
+            </div>
+          </div>
+
+          <!-- List of Added Photos -->
+          <div class="section-title-bar">
+            <h4>Fila de Fotos (<span id="photos-count-text">0</span>)</h4>
+            <div class="title-actions">
+              <button id="btn-clear-photos" class="btn-text-danger" title="Excluir todas as fotos">
+                <i class="fa-solid fa-trash-can"></i> Limpar Fotos
+              </button>
+            </div>
+          </div>
+
+          <div id="photos-grid-list" class="photos-list-scroll">
+            <div class="empty-state">
+              <i class="fa-regular fa-image text-cyan"></i>
+              <p>Nenhuma foto adicionada ainda.</p>
+              <span>Faça upload de imagens acima ou escolha um modelo pronto.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: ABERTURA, ENCERRAMENTO E TEXTOS NOS SLIDES (100% PERSONALIZÁVEL) -->
+        <div id="tab-text" class="tab-pane">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-film text-cyan"></i> Telas & Textos do Vídeo</h3>
+            <span class="info-text">Edite 100% de todas as frases e títulos do seu jeito!</span>
+          </div>
+
+          <div class="text-form">
+            <!-- Special Video Intro Opening Screen Section -->
+            <div class="form-section-box">
+              <h4 class="section-title"><i class="fa-solid fa-clapperboard text-cyan"></i> 1. Tela de Abertura do Vídeo (Intro)</h4>
+              
+              <div class="form-group margin-top-xs">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="check-enable-intro" checked>
+                  <span><strong>Ativar Tela de Abertura Especial</strong></span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label>Linha de Categoria / Tag Superior</label>
+                <input type="text" id="input-intro-tag" class="form-input" value="EDIÇÃO ESPECIAL DE FOTOS">
+              </div>
+
+              <div class="form-group">
+                <label>Texto de Apresentação (Linha do Meio)</label>
+                <input type="text" id="input-intro-presenter" class="form-input" value="Apresenta">
+              </div>
+
+              <div class="form-group">
+                <label>Título Principal de Abertura</label>
+                <input type="text" id="input-intro-title" class="form-input" placeholder="Ex: Nossas Melhores Lembranças">
+              </div>
+
+              <div class="form-group">
+                <label>Subtítulo da Abertura</label>
+                <input type="text" id="input-intro-subtitle" class="form-input" placeholder="Ex: Um Filme Especial de Fotos e Música">
+              </div>
+
+              <div class="form-group">
+                <label>Duração da Abertura (segundos)</label>
+                <input type="number" id="input-intro-duration" min="1" max="15" step="0.5" value="3.5" class="form-input">
+              </div>
+            </div>
+
+            <!-- Global Slide Overlay Text & Display Rule -->
+            <div class="form-section-box margin-top-sm">
+              <h4 class="section-title"><i class="fa-solid fa-font text-cyan"></i> 2. Regra de Exibição dos Textos</h4>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-eye text-cyan"></i> Exibição do Texto Principal</label>
+                <select id="select-text-display" class="form-select">
+                  <option value="first-4-slides">Primeiras 4 Fotos (Abertura do Vídeo)</option>
+                  <option value="first-slide">Apenas na 1ª Foto</option>
+                  <option value="all-slides">Em Todos os Slides</option>
+                  <option value="disabled">Não Exibir Título Global</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-palette text-cyan"></i> Cor & Brilho do Texto</label>
+                <select id="select-text-style" class="form-select">
+                  <option value="orange-glow">Texto Branco com Sombra Neon Amarela</option>
+                  <option value="blue-glow">Texto Amarelo Ouro com Brilho Azul Neon</option>
+                  <option value="cyan-bright">Azul Elétrico Neon (Cyan)</option>
+                  <option value="gold-glow">Amarelo Ouro Solar Iluminado</option>
+                  <option value="dark-box">Caixa Escura Transparente com Bordas Neon</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-arrows-up-down-left-right text-cyan"></i> Posição Vertical do Texto</label>
+                <select id="select-text-position" class="form-select">
+                  <option value="center">Centralizado no Meio</option>
+                  <option value="bottom">Inferior (Rodapé)</option>
+                  <option value="top">Superior (Topo)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Special Video Outro Ending Screen Section -->
+            <div class="form-section-box margin-top-sm">
+              <h4 class="section-title"><i class="fa-solid fa-flag-checkered text-cyan"></i> 3. Tela de Encerramento do Vídeo (Outro / Final)</h4>
+              
+              <div class="form-group margin-top-xs">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="check-enable-outro" checked>
+                  <span><strong>Ativar Tela de Encerramento do Vídeo</strong></span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label>Ícone de Destaque no Encerramento</label>
+                <select id="select-outro-icon" class="form-select">
+                  <option value="♥">Coração (♥)</option>
+                  <option value="★">Estrela (★)</option>
+                  <option value="🎬">Claquete de Cinema (🎬)</option>
+                  <option value="✨">Brilho / Sparkles (✨)</option>
+                  <option value="👑">Coroa (👑)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Texto Final de Encerramento</label>
+                <input type="text" id="input-outro-title" class="form-input" value="Obrigado por Assistir!">
+              </div>
+
+              <div class="form-group">
+                <label>Subtítulo / Mensagem Final</label>
+                <input type="text" id="input-outro-subtitle" class="form-input" value="Guardado para Sempre no Coração">
+              </div>
+
+              <div class="form-group">
+                <label>Duração do Encerramento (segundos)</label>
+                <input type="number" id="input-outro-duration" min="1" max="15" step="0.5" value="3.5" class="form-input">
+              </div>
+            </div>
+
+            <!-- Section 4: Individual Slide Captions for First 4 Photos -->
+            <div class="form-section-box margin-top-sm">
+              <h4 class="section-title"><i class="fa-solid fa-align-left text-cyan"></i> 4. Mensagens e Legendas das Fotos (Edite do seu jeito)</h4>
+              
+              <div class="form-group">
+                <label>Legenda da Foto #1</label>
+                <input type="text" id="input-slide-caption-1" class="form-input" placeholder="Ex: Momentos Inesquecíveis">
+              </div>
+
+              <div class="form-group">
+                <label>Legenda da Foto #2</label>
+                <input type="text" id="input-slide-caption-2" class="form-input" placeholder="Ex: Novas Aventuras & Viagens">
+              </div>
+
+              <div class="form-group">
+                <label>Legenda da Foto #3</label>
+                <input type="text" id="input-slide-caption-3" class="form-input" placeholder="Ex: A Magia da Natureza">
+              </div>
+
+              <div class="form-group">
+                <label>Legenda da Foto #4</label>
+                <input type="text" id="input-slide-caption-4" class="form-input" placeholder="Ex: Emoção & Alegria">
+              </div>
+            </div>
+
+            <div class="form-group margin-top-xs">
+              <div class="info-card-blue">
+                <i class="fa-solid fa-circle-info"></i>
+                <span><strong>Dica:</strong> Para colocar textos em QUALQUER foto individual, você pode digitar nas caixas acima ou clicar no lápis <i class="fa-solid fa-pen"></i> sobre qualquer foto!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 3: MUSIC -->
+        <div id="tab-music" class="tab-pane">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-compact-disc text-cyan"></i> Música de Fundo (HQ Sound)</h3>
+            <span class="info-text">Upload de áudio próprio ou selecione da biblioteca de músicas prontas</span>
+          </div>
+
+          <!-- Stock Music Picker Section -->
+          <div class="form-section-box">
+            <label><i class="fa-solid fa-headphones text-cyan"></i> Músicas Sem Direitos Autorais Incluídas:</label>
+            <button id="btn-load-stock-audio" class="btn btn-blue-outline margin-top-xs">
+              <i class="fa-solid fa-play"></i> Usar Trilha Melódica HQ 4K
+            </button>
+          </div>
+
+          <!-- Audio Upload Dropzone -->
+          <div id="drop-zone-music" class="upload-dropzone audio-dropzone">
+            <input type="file" id="input-upload-music" accept="audio/*" class="file-input-hidden">
+            <div class="dropzone-content">
+              <div class="drop-icon audio-icon">
+                <i class="fa-solid fa-music"></i>
+              </div>
+              <p class="drop-title">Adicionar Sua Música Própria</p>
+              <p class="drop-sub"><span class="link-highlight">Selecione o arquivo de som</span></p>
+              <span class="file-types">MP3, WAV, OGG, M4A (Áudio Limpo & Sem Ruídos)</span>
+            </div>
+          </div>
+
+          <!-- Active Music Track Settings -->
+          <div id="active-music-card" class="music-card-container hidden">
+            <div class="music-info-header">
+              <div class="audio-wave-icon">
+                <i class="fa-solid fa-volume-high"></i>
+              </div>
+              <div class="audio-details">
+                <h5 id="music-title-text">nome-da-musica.mp3</h5>
+                <span id="music-duration-text">00:00</span>
+              </div>
+              <button id="btn-remove-music" class="btn-icon-danger" title="Excluir Música">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <!-- Audio Controls -->
+            <div class="audio-controls-group">
+              <div class="control-row">
+                <label><i class="fa-solid fa-volume-low"></i> Volume da Música</label>
+                <div class="slider-with-val">
+                  <input type="range" id="slider-music-volume" min="0" max="100" value="85">
+                  <span id="val-music-volume">85%</span>
+                </div>
+              </div>
+
+              <div class="control-row inline-checks">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="check-music-fade" checked>
+                  <span>Fade In & Fade Out Suave (Alta Qualidade)</span>
+                </label>
+              </div>
+
+              <div class="control-row inline-checks">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="check-music-loop" checked>
+                  <span>Repetir música se o vídeo for longo</span>
+                </label>
+              </div>
+
+              <div class="control-row inline-checks">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="check-sync-duration">
+                  <span>Ajustar slides ao tempo da música</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="music-empty-state" class="empty-state">
+            <i class="fa-solid fa-headphones text-cyan"></i>
+            <p>Nenhuma música de fundo adicionada.</p>
+            <span>O vídeo será gerado em silêncio ou com o som que você escolher.</span>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 4: EFFECTS, 4K & TRANSITIONS -->
+        <div id="tab-effects" class="tab-pane">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-wand-magic-sparkles text-cyan"></i> Efeitos & Qualidade 4K</h3>
+            <span class="info-text">Ajustes de fotos, transições variadas e qualidade</span>
+          </div>
+
+          <div class="effects-form">
+            <!-- Quality Pickers -->
+            <div class="form-group">
+              <label><i class="fa-solid fa-tv text-cyan"></i> Qualidade do Vídeo Gerado</label>
+              <select id="select-video-resolution" class="form-select">
+                <option value="4K">4K Ultra HD (3840x2160) - Máxima Nitidez</option>
+                <option value="1080p">Full HD (1920x1080) - Alta Qualidade</option>
+              </select>
+            </div>
+
+            <!-- Full Photo Fit Mode -->
+            <div class="form-group">
+              <label><i class="fa-solid fa-expand text-cyan"></i> Exibição das Fotos no Slideshow</label>
+              <select id="select-image-fit" class="form-select">
+                <option value="contain-blur">Foto Inteira 100% Visível com Fundo Desfocado (Recomendado)</option>
+                <option value="cover">Preencher Tela (Corte Inteligente)</option>
+                <option value="contain-black">Foto Inteira com Fundo Preto</option>
+              </select>
+            </div>
+
+            <!-- Auto-Varied Transitions -->
+            <div class="form-group">
+              <label><i class="fa-solid fa-shuffle text-cyan"></i> Transição Entre Fotos</label>
+              <select id="select-global-transition" class="form-select">
+                <option value="random">Efeitos Sempre Diferentes (Variados a Cada Foto)</option>
+                <option value="fade">Fade Suave (Dissolução)</option>
+                <option value="slide-left">Slide Para Esquerda</option>
+                <option value="slide-right">Slide Para Direita</option>
+                <option value="slide-up">Slide Para Cima</option>
+                <option value="zoom-in">Zoom In Crossfade</option>
+                <option value="wipe-circle">Revelação Circular</option>
+                <option value="blur">Desfoque Gradativo (Blur)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-stopwatch"></i> Duração das Transições</label>
+              <div class="slider-with-val">
+                <input type="range" id="slider-transition-duration" min="0.3" max="2.5" step="0.1" value="1.2">
+                <span id="val-transition-duration">1.2s</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-camera"></i> Efeito Pan & Zoom (Ken Burns)</label>
+              <select id="select-ken-burns" class="form-select">
+                <option value="enabled">Ativado (Movimento Suave de Câmera)</option>
+                <option value="disabled">Desativado (Fotos Estáticas)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-wand-magic"></i> Filtro de Imagem Global</label>
+              <select id="select-photo-filter" class="form-select">
+                <option value="orange-blue">Azul Elétrico & Amarelo Ouro (Gradient Glow)</option>
+                <option value="none">Normal (Sem Filtro - Cores Originais)</option>
+                <option value="warm">Cores Quentes Douradas</option>
+                <option value="cyber">Cyberpunk Azul Elétrico</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- CENTER & RIGHT: VIDEO PREVIEW CANVAS & TIMELINE -->
+      <section class="stage-container glass-card">
+        
+        <!-- PREVIEW TOP BAR: ASPECT RATIO & CONTROLS -->
+        <div class="stage-header">
+          <div class="stage-title">
+            <span class="pulse-dot"></span>
+            <h2>Pré-Visualização em 4K</h2>
+            <span class="quality-badge">4K Ultra HD</span>
+          </div>
+
+          <!-- Aspect Ratio Switcher -->
+          <div class="aspect-selector">
+            <span class="label-sm">Formato:</span>
+            <button class="aspect-btn active" data-aspect="16:9" title="16:9 - Youtube / TV / Computador">
+              <i class="fa-solid fa-tv"></i> 16:9
+            </button>
+            <button class="aspect-btn" data-aspect="9:16" title="9:16 - TikTok / Instagram Reels / Stories">
+              <i class="fa-solid fa-mobile-screen-button"></i> 9:16
+            </button>
+            <button class="aspect-btn" data-aspect="1:1" title="1:1 - Feed Quadrado">
+              <i class="fa-solid fa-square"></i> 1:1
+            </button>
+            <button class="aspect-btn" data-aspect="4:5" title="4:5 - Retrato Instagram">
+              <i class="fa-solid fa-rectangle-ad"></i> 4:5
+            </button>
+          </div>
+        </div>
+
+        <!-- CANVAS PREVIEW SCREEN CONTAINER -->
+        <div class="canvas-wrapper">
+          <div id="player-screen" class="player-screen ratio-16-9">
+            <canvas id="slideshow-canvas" width="3840" height="2160"></canvas>
+            
+            <!-- Canvas Overlay Controls -->
+            <div id="canvas-overlay-play" class="canvas-play-overlay">
+              <i class="fa-solid fa-play"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLAYER CONTROL BAR -->
+        <div class="player-controls">
+          <div class="controls-left">
+            <button id="btn-play-pause" class="btn-icon-lg btn-orange" title="Reproduzir / Pausar">
+              <i class="fa-solid fa-play"></i>
+            </button>
+            <button id="btn-stop-preview" class="btn-icon-md" title="Reiniciar do Início">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <div class="time-display">
+              <span id="time-current" class="time-code">00:00</span>
+              <span class="time-sep">/</span>
+              <span id="time-total" class="time-code">00:00</span>
+            </div>
+          </div>
+
+          <!-- Video Progress Scrubber Bar -->
+          <div class="scrubber-container">
+            <input type="range" id="video-scrubber" min="0" max="100" value="0" step="0.1">
+            <div id="scrubber-fill" class="scrubber-progress-fill"></div>
+          </div>
+
+          <div class="controls-right">
+            <!-- Mute / Volume -->
+            <button id="btn-toggle-mute" class="btn-icon-md" title="Ativar/Desativar Som">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
+            <button id="btn-fullscreen" class="btn-icon-md" title="Tela Cheia">
+              <i class="fa-solid fa-expand"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- BOTTOM TIMELINE TRACK EDITOR -->
+        <div class="timeline-editor">
+          <div class="timeline-header">
+            <div class="tl-title">
+              <i class="fa-solid fa-film text-cyan"></i>
+              <span>Linha do Tempo dos Slides</span>
+            </div>
+
+            <div class="tl-global-controls">
+              <label>Duração Padrão por Foto:</label>
+              <div class="mini-duration-input">
+                <input type="number" id="input-global-slide-duration" min="1" max="30" value="3.5" step="0.5">
+                <span>s</span>
+              </div>
+              <button id="btn-apply-all-duration" class="btn-xs btn-blue-outline" title="Aplicar esta duração a todas as fotos">
+                Aplicar a Todas
+              </button>
+            </div>
+          </div>
+
+          <!-- Visual Slides Track -->
+          <div id="timeline-slides-container" class="timeline-slides-scroll">
+            <div class="empty-timeline-hint">
+              <i class="fa-regular fa-images"></i>
+              <span>Adicione fotos na barra lateral para visualizar os slides aqui.</span>
+            </div>
+          </div>
+
+          <!-- Audio Visual Track -->
+          <div class="timeline-audio-track">
+            <div class="audio-track-header">
+              <i class="fa-solid fa-music text-cyan"></i>
+              <span>Faixa de Áudio de Fundo:</span>
+              <span id="audio-track-name" class="track-name-badge">Nenhuma Música</span>
+            </div>
+            <div id="audio-visual-bar" class="audio-visual-bar">
+              <div id="audio-fill-progress" class="audio-fill"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- MODAL: EXPORT MP4 VIDEO PROGRESS & PLAYER INTEGRADO COM OPÇÃO WEBM -->
+    <div id="modal-export" class="modal-overlay hidden">
+      <div class="modal-card glass-modal">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-film text-cyan"></i>
+            <h3 id="export-modal-title">Gerando seu Vídeo MP4...</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-export"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Canvas Live Encoding View -->
+          <div id="export-live-box" class="export-preview-box">
+            <canvas id="export-preview-canvas" width="640" height="360"></canvas>
+            <div class="render-badge">Renderização MP4 Indexado HD/4K</div>
+          </div>
+
+          <!-- Embedded Video Player when Export Completes -->
+          <div id="export-player-box" class="export-preview-box hidden">
+            <video id="exported-video-player" controls style="width:100%; height:100%; border-radius:12px; background:#000;"></video>
+          </div>
+
+          <div class="progress-details">
+            <div class="progress-text-row">
+              <span id="export-status-text">Codificando vídeo H.264 MP4 e criando tabela de quadros...</span>
+              <span id="export-percent-text" class="percent-highlight">0%</span>
+            </div>
+
+            <div class="progress-bar-track">
+              <div id="export-progress-fill" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+
+            <div class="stats-row">
+              <div class="stat-item">
+                <span class="stat-label">Frames Processados:</span>
+                <span id="export-frame-count" class="stat-val">0 / 0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Resolução:</span>
+                <span id="export-resolution-val" class="stat-val highlight-blue">3840x2160 (4K Ultra HD)</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Indexação de Quadros:</span>
+                <span id="export-filename-val" class="stat-val highlight-green">ISO MP4 Valido (moov / stbl)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-cancel-export" class="btn btn-secondary">Cancelar</button>
+          <button id="btn-play-exported-video" class="btn btn-blue-outline hidden">
+            <i class="fa-solid fa-circle-play"></i> Assistir no Navegador
+          </button>
+          <button id="btn-download-mp4-now" class="btn btn-orange-gradient btn-glow hidden">
+            <i class="fa-solid fa-download"></i> Baixar MP4 (Windows & Celular)
+          </button>
+          <button id="btn-download-webm-now" class="btn btn-secondary hidden" title="Baixar alternativa em formato WEBM para VLC">
+            <i class="fa-solid fa-file-video"></i> Baixar WEBM (VLC)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: EDIT SINGLE PHOTO SLIDE & INDIVIDUAL TEXT -->
+    <div id="modal-edit-slide" class="modal-overlay hidden">
+      <div class="modal-card glass-modal modal-md">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-pen-to-square text-cyan"></i>
+            <h3>Editar Foto & Legenda do Slide</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-edit-slide"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body edit-slide-body">
+          <div class="edit-slide-preview">
+            <img id="edit-slide-img" src="" alt="Slide Preview">
+          </div>
+
+          <div class="edit-slide-fields">
+            <div class="form-group">
+              <label><i class="fa-solid fa-clock text-cyan"></i> Duração desta foto (segundos)</label>
+              <input type="number" id="edit-slide-duration" min="1" max="60" step="0.5" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-wand-magic-sparkles text-cyan"></i> Efeito de Transição Desta Foto</label>
+              <select id="edit-slide-transition" class="form-select">
+                <option value="default">Usar Transições Variadas Aleatórias</option>
+                <option value="fade">Fade Suave (Dissolução)</option>
+                <option value="slide-left">Slide Para Esquerda</option>
+                <option value="slide-right">Slide Para Direita</option>
+                <option value="slide-up">Slide Para Cima</option>
+                <option value="zoom-in">Zoom In Crossfade</option>
+                <option value="wipe-circle">Revelação Circular</option>
+                <option value="blur">Desfoque (Blur)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-font text-cyan"></i> Texto / Legenda Desta Foto</label>
+              <input type="text" id="edit-slide-caption" placeholder="Ex: Escreva aqui o texto exclusivo desta foto..." class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-delete-current-slide" class="btn btn-danger-outline">
+            <i class="fa-solid fa-trash-can"></i> Excluir Foto
+          </button>
+          <button id="btn-save-slide-changes" class="btn btn-orange-gradient">
+            <i class="fa-solid fa-check"></i> Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: SAVED PROJECTS MANAGER -->
+    <div id="modal-projects" class="modal-overlay hidden">
+      <div class="modal-card glass-modal modal-md">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-folder-open text-cyan"></i>
+            <h3>Seus Projetos Salvos</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-projects"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <div id="projects-list-container" class="projects-grid">
+            <!-- Dynamically loaded projects list -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-export-json-file" class="btn btn-secondary">
+            <i class="fa-solid fa-file-export"></i> Exportar Arquivo .JSON
+          </button>
+          <label class="btn btn-secondary">
+            <i class="fa-solid fa-file-import"></i> Importar Arquivo .JSON
+            <input type="file" id="input-import-json" accept=".json" class="file-input-hidden">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: SHARE PROJECT / VIDEO -->
+    <div id="modal-share" class="modal-overlay hidden">
+      <div class="modal-card glass-modal modal-md">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-share-nodes text-cyan"></i>
+            <h3>Compartilhar Seu Slideshow 4K</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-share"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="share-intro">Compartilhe ou publique seu slideshow nas redes sociais com um clique!</p>
+
+          <div class="share-buttons-grid">
+            <button class="share-btn whatsapp" id="btn-share-whatsapp">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </button>
+            <button class="share-btn telegram" id="btn-share-telegram">
+              <i class="fa-brands fa-telegram"></i> Telegram
+            </button>
+            <button class="share-btn youtube" id="btn-share-youtube">
+              <i class="fa-brands fa-youtube"></i> YouTube Shorts
+            </button>
+            <button class="share-btn tiktok" id="btn-share-tiktok">
+              <i class="fa-brands fa-tiktok"></i> TikTok / Reels
+            </button>
+          </div>
+
+          <div class="form-group margin-top-lg">
+            <label>Copiar Link de Compartilhamento do Projeto</label>
+            <div class="input-with-button">
+              <input type="text" id="share-link-input" readonly value="https://gn-slides.app/project/v1-demo-4k" class="form-input">
+              <button id="btn-copy-share-link" class="btn btn-orange">Copiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btn-close-share-footer">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ATIVAÇÃO DE LICENÇA PRO & GERADOR ADMIN TEMPORAL -->
+    <div id="modal-license" class="modal-overlay hidden">
+      <div class="modal-card glass-modal modal-md">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-key text-yellow"></i>
+            <h3 id="license-modal-title">Ativação da Licença GN SLIDES PRO</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-license"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <div id="license-status-box" class="info-card-blue">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>
+              <strong id="license-status-title">Status: Versão de Demonstração (Grátis)</strong>
+              <p id="license-status-desc" class="margin-top-xs">Digite sua Chave de Licença PRO para remover a marca d'água e liberar exportação 4K ilimitada!</p>
+              <div id="license-device-id-info" class="margin-top-xs" style="font-family:var(--font-mono); font-size:11px; color:var(--orange-main);">Dispositivo Atual: DEV-1234</div>
+            </div>
+          </div>
+
+          <div class="form-group margin-top-sm">
+            <label>Sua Chave de Ativação (License Key)</label>
+            <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-5MIN-MARCOS-ABCD" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label>E-mail do Comprador (Opcional)</label>
+            <input type="email" id="input-license-email" placeholder="seu-email@dominio.com" class="form-input">
+          </div>
+
+          <!-- Secret Admin Key Generator Toggle with Time Plans -->
+          <div class="form-section-box margin-top-sm" style="background: rgba(2, 132, 199, 0.05);">
+            <h4 class="section-title"><i class="fa-solid fa-user-gear text-cyan"></i> Painel do Dono (Gerador de Chaves Temporais)</h4>
+            <p class="info-text">Escolha a duração do plano e gere chaves bloqueadas por dispositivo!</p>
+
+            <div class="form-group">
+              <label>Nome do Cliente</label>
+              <input type="text" id="admin-client-name" placeholder="Ex: MARCOS" class="form-input" value="CLIENTE">
+            </div>
+
+            <div class="form-group">
+              <label>Prazo de Validade da Licença</label>
+              <select id="admin-select-plan-duration" class="form-select">
+                <option value="5MIN">⏱️ 5 Minutos (Teste Rápido)</option>
+                <option value="24H">⏳ 24 Horas (Teste de 1 Dia)</option>
+                <option value="1MES">📅 1 Mês (30 Dias)</option>
+                <option value="6MESES">🗓️ 6 Meses (180 Dias)</option>
+                <option value="1ANO">👑 1 Ano (365 Dias)</option>
+                <option value="VITALICIO">♾️ Vitalício (Sem Expiração)</option>
+              </select>
+            </div>
+
+            <button id="btn-admin-generate-key" class="btn btn-blue-outline btn-xs margin-top-xs">
+              <i class="fa-solid fa-key"></i> Gerar Chave do Plano Selecionado
+            </button>
+
+            <div class="form-group margin-top-xs">
+              <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800;">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-submit-activate-key" class="btn btn-orange-gradient">
+            <i class="fa-solid fa-check"></i> Ativar Licença PRO Agora
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: LICENÇA EXPIRADA (BLOQUEIO AUTOMÁTICO DO SISTEMA) -->
+    <div id="modal-license-expired" class="modal-overlay hidden" style="z-index: 5000;">
+      <div class="modal-card glass-modal modal-md" style="border: 2px solid var(--danger-color);">
+        <div class="modal-header" style="background: rgba(239, 68, 68, 0.12);">
+          <div class="modal-title">
+            <i class="fa-solid fa-lock text-danger" style="font-size:24px; color:var(--danger-color);"></i>
+            <h3 style="color:var(--danger-color);">Acesso Bloqueado - Licença Expirada</h3>
+          </div>
+        </div>
+
+        <div class="modal-body text-center" style="text-align:center;">
+          <div class="drop-icon" style="background:rgba(239, 68, 68, 0.15); color:var(--danger-color); width:70px; height:70px; font-size:32px; margin: 0 auto 14px auto;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+
+          <h4 style="font-size:20px; font-weight:800; color:var(--text-main);">O prazo da sua licença venceu!</h4>
+          <p class="info-text margin-top-xs" style="font-size:14px;">
+            O tempo de teste ou o período do seu plano finalizou. Digite uma nova Chave de Licença válida abaixo para desbloquear o sistema imediatamente.
+          </p>
+
+          <div class="form-group margin-top-md" style="text-align:left;">
+            <label>Nova Chave de Licença</label>
+            <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-CLIENTE-1234" class="form-input" style="font-family:var(--font-mono);">
+          </div>
+        </div>
+
+        <div class="modal-footer" style="justify-content:center;">
+          <button id="btn-submit-expired-key" class="btn btn-orange-gradient" style="width:100%;">
+            <i class="fa-solid fa-key"></i> Desbloquear Sistema Agora
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: LOGIN E CRIAÇÃO DE CONTA (AUTH) -->
+    <div id="modal-auth" class="modal-overlay hidden">
+      <div class="modal-card glass-modal modal-md">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-user-lock text-cyan"></i>
+            <h3 id="auth-modal-title">Acessar Sua Conta - GN SLIDES PRO</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-auth"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Auth Switcher Tabs -->
+          <div class="auth-tabs-row" style="display:flex; gap:10px; border-bottom:1px solid var(--glass-border-blue); padding-bottom:10px;">
+            <button id="tab-auth-login" class="btn btn-secondary active" style="flex:1;"><i class="fa-solid fa-right-to-bracket"></i> Entrar na Conta</button>
+            <button id="tab-auth-register" class="btn btn-secondary" style="flex:1;"><i class="fa-solid fa-user-plus"></i> Criar Nova Conta</button>
+          </div>
+
+          <!-- Login Form View -->
+          <div id="form-auth-login" class="auth-form-pane">
+            <div class="form-group margin-top-xs">
+              <label>Seu E-mail</label>
+              <input type="email" id="input-login-email" placeholder="seu-email@dominio.com" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Sua Senha</label>
+              <input type="password" id="input-login-password" placeholder="Digite sua senha" class="form-input">
+            </div>
+            <button id="btn-submit-login" class="btn btn-orange-gradient margin-top-sm" style="width:100%;">
+              <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
+            </button>
+          </div>
+
+          <!-- Register Form View -->
+          <div id="form-auth-register" class="auth-form-pane hidden">
+            <div class="form-group margin-top-xs">
+              <label>Seu Nome Completo</label>
+              <input type="text" id="input-register-name" placeholder="Ex: Gabriel Santos" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Seu Melhor E-mail</label>
+              <input type="email" id="input-register-email" placeholder="seu-email@dominio.com" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Crie uma Senha</label>
+              <input type="password" id="input-register-password" placeholder="Mínimo 4 caracteres" class="form-input">
+            </div>
+            <button id="btn-submit-register" class="btn btn-orange-gradient margin-top-sm" style="width:100%;">
+              <i class="fa-solid fa-user-check"></i> Cadastrar & Acessar Agora
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button id="btn-guest-bypass" class="btn btn-secondary btn-xs">
+            <i class="fa-solid fa-user-clock"></i> Continuar como Convidado
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION SYSTEM -->
+    <div id="toast-container" class="toast-container"></div>
+
+  </div>
+
+  <!-- SCRIPT FILES -->
+  <script src="js/auth-system.js"></script>
+  <script src="js/license-system.js"></script>
+  <script src="js/demo-assets.js"></script>
+  <script src="js/project-storage.js"></script>
+  <script src="js/audio-engine.js"></script>
+  <script src="js/slideshow-engine.js"></script>
+  <script src="js/video-exporter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
