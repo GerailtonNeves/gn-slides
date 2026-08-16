@@ -1,8 +1,8 @@
 /* ==========================================================================
    GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
-   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Cryptographic Checksum
-   Validation with Zero-Tolerance for Typos (Invalid Keys STRICTLY Fail & Block System),
+   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Deterministic Bitwise
+   Checksum Validation (100% Symmetric Across All Mobile & Desktop Browsers),
    Instant Remote License Revocation, 1-Click Unlocking, and Full Client CRM
    Management (Renew, Reset Device Lock, Revoke/Unrevoke, WhatsApp Direct).
    ========================================================================== */
@@ -291,20 +291,23 @@ const LicenseSystem = {
     this.licenseData = null;
   },
 
-  // Cryptographic checksum calculation for strict character matching
+  // 100% Deterministic 32-bit Integer Bitwise Checksum for All Mobile & Desktop Browsers
   calculateChecksum: function(str) {
-    let hash = 5381;
+    let hash = 0;
     for (let i = 0; i < str.length; i++) {
-      hash = (hash * 33) ^ str.charCodeAt(i);
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit signed integer
     }
-    return Math.abs(hash % 65536).toString(16).toUpperCase().padStart(4, '0');
+    const positiveHash = Math.abs(hash);
+    return positiveHash.toString(36).toUpperCase().padStart(4, '0').slice(-4);
   },
 
   // Admin Key Generator for all plan types
   generateValidKey: function(clientName = 'CLIENTE', planCode = 'VITALICIO') {
     const cleanClient = (clientName || 'CLIENTE').trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
     const plan = this.PLANS[planCode] ? planCode : 'VITALICIO';
-    const payload = `KEY_${plan}_${cleanClient}_${this.SECRET_SALT}`;
+    const payload = `GNSLIDES_${plan}_${cleanClient}_${this.SECRET_SALT}`;
     const checksum = this.calculateChecksum(payload);
     return `GNSLIDES-${plan}-${cleanClient}-${checksum}`;
   },
@@ -322,7 +325,7 @@ const LicenseSystem = {
       return { valid: false, message: '❌ Esta chave de licença foi BLOQUEADA pelo administrador. Entre em contato pelo WhatsApp (11) 98589-7774.' };
     }
 
-    // 2. Master Keys for instant admin testing
+    // 2. Master Keys for instant admin testing & demo
     if (key === 'GNSLIDES-PRO-ADMIN-MASTER-2026' || key === 'GNSLIDES-PRO-VIP-2026') {
       return { valid: true, planCode: 'VITALICIO', clientName: 'VIP' };
     }
@@ -330,7 +333,7 @@ const LicenseSystem = {
     // 3. Strict format check: Must be GNSLIDES-PLANO-NOME-CHECKSUM
     const parts = key.split('-');
     if (parts.length !== 4 || parts[0] !== 'GNSLIDES') {
-      return { valid: false, message: '❌ Licença Incorreta! O formato da chave deve ser GNSLIDES-PLANO-NOME-XXXX.' };
+      return { valid: false, message: '❌ Licença Incorreta! A chave digitada possui caracteres incorretos.' };
     }
 
     const planCode = parts[1];
@@ -345,7 +348,7 @@ const LicenseSystem = {
       return { valid: false, message: '❌ Licença Incorreta! O código final de verificação deve ter 4 caracteres.' };
     }
 
-    // 4. VERIFY AGAINST CRM DATABASE FIRST
+    // 4. VERIFY IN LOCAL CRM DATABASE FIRST IF PRESENT
     const clients = this.getAllClients();
     const registeredClient = clients.find(c => c.key === key);
 
@@ -356,9 +359,9 @@ const LicenseSystem = {
       return { valid: true, planCode: registeredClient.planCode, clientName: registeredClient.name };
     }
 
-    // 5. VERIFY CRYPTOGRAPHIC CHECKSUM MATCH
+    // 5. DETERMINISTIC CRYPTOGRAPHIC CHECKSUM VERIFICATION (100% Match with generateValidKey)
     const cleanClient = clientName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
-    const payload = `KEY_${planCode}_${cleanClient}_${this.SECRET_SALT}`;
+    const payload = `GNSLIDES_${planCode}_${cleanClient}_${this.SECRET_SALT}`;
     const expectedChecksum = this.calculateChecksum(payload);
 
     if (userChecksum === expectedChecksum) {

@@ -836,7 +836,7 @@
               </button>
 
               <div class="input-with-button" style="flex:1;">
-                <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800;" autocapitalize="characters" spellcheck="false">
+                <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800; font-size:12px; letter-spacing:-0.3px;" autocapitalize="characters" spellcheck="false">
                 <button id="btn-copy-generated-key" class="btn btn-blue-outline btn-xs" type="button" title="Copiar chave gerada">
                   <i class="fa-solid fa-copy"></i> Copiar
                 </button>
@@ -883,7 +883,7 @@
           <div class="form-group margin-top-md">
             <label>Sua Chave de Licença (License Key)</label>
             <div class="input-with-button">
-              <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-1ANO-MARCOS-8A4F" class="form-input" style="font-family: var(--font-mono); font-size:15px;" autocapitalize="characters" spellcheck="false" autocorrect="off">
+              <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-1ANO-MARCOS-8A4F" class="form-input" style="font-family: var(--font-mono); font-size:12px; letter-spacing:-0.3px;" autocapitalize="characters" spellcheck="false" autocorrect="off">
               <button id="btn-paste-license-key" class="btn btn-blue-outline btn-sm" type="button" title="Colar chave copiada do WhatsApp">
                 <i class="fa-solid fa-paste"></i> Colar
               </button>
@@ -918,18 +918,18 @@
         <div class="modal-header" style="background: rgba(239, 68, 68, 0.12);">
           <div class="modal-title">
             <i class="fa-solid fa-lock text-danger" style="font-size:24px; color:var(--danger-color);"></i>
-            <h3 style="color:var(--danger-color);">Licença Vencida - Acesso Bloqueado</h3>
+            <h3 id="expired-modal-header-title" style="color:var(--danger-color);">Licença Bloqueada pelo Administrador</h3>
           </div>
         </div>
 
         <div class="modal-body text-center" style="text-align:center;">
           <div class="drop-icon" style="background:rgba(239, 68, 68, 0.15); color:var(--danger-color); width:70px; height:70px; font-size:32px; margin: 0 auto 14px auto;">
-            <i class="fa-solid fa-clock-rotate-left"></i>
+            <i id="expired-modal-icon" class="fa-solid fa-ban"></i>
           </div>
 
-          <h4 style="font-size:22px; font-weight:800; color:var(--text-main);">Sua licença está vencida!</h4>
-          <p class="info-text margin-top-xs" style="font-size:15px; color:#e2e8f0; line-height:1.5;">
-            Entre em contato pelo telefone <strong style="color:var(--orange-main); font-size:18px; display:block; margin-top:6px;"><i class="fa-brands fa-whatsapp text-green"></i> (11) 98589-7774</strong> para adicionar sua nova licença e desbloquear o sistema.
+          <h4 id="expired-modal-main-title" style="font-size:22px; font-weight:800; color:var(--text-main);">Sua licença foi BLOQUEADA pelo administrador!</h4>
+          <p id="expired-modal-main-desc" class="info-text margin-top-xs" style="font-size:15px; color:#e2e8f0; line-height:1.5;">
+            Entre em contato pelo telefone <strong style="color:var(--orange-main); font-size:18px; display:block; margin-top:6px;"><i class="fa-brands fa-whatsapp text-green"></i> (11) 98589-7774</strong> para regularizar e liberar o seu acesso.
           </p>
 
           <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Minha%20licença%20do%20GN%20SLIDES%20PRO%20venceu,%20gostaria%20de%20adquirir%20uma%20nova%20licença." target="_blank" class="btn btn-orange-gradient margin-top-sm" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; text-decoration:none; font-weight:700;">
@@ -939,7 +939,7 @@
           <div class="form-group margin-top-md" style="text-align:left;">
             <label>Digite ou Cole sua Nova Chave de Licença</label>
             <div class="input-with-button margin-top-xs">
-              <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-NOME-1234" class="form-input" style="font-family:var(--font-mono);" autocapitalize="characters" spellcheck="false" autocorrect="off">
+              <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-NOME-1234" class="form-input" style="font-family:var(--font-mono); font-size:12px; letter-spacing:-0.3px;" autocapitalize="characters" spellcheck="false" autocorrect="off">
               <button id="btn-paste-expired-key" class="btn btn-blue-outline btn-sm" type="button" title="Colar chave copiada">
                 <i class="fa-solid fa-paste"></i> Colar
               </button>
