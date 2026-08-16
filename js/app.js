@@ -2,11 +2,11 @@
    GN SLIDES PRO 4K - MAIN APPLICATION CONTROLLER (COMMERCIAL ENGINE)
    Binds AuthSystem, Time-based License System (5 Min, 24h, 1 Mês, 6 Meses,
    1 Ano, Vitalício), Slide Duration Controls (1.5s, 2s, 3s, 5s, Custom),
-   Hardware Device Locking, Guest Lock (No Music + Watermark for Visitors),
+   Single Device Binding (1 License = 1 Hardware Fingerprint), Guest Lock,
    PRO Unlocked Mode for Paid Licensed Clients, Secret Owner CRM Panel
-   (Protected by PIN 11985897774: Generate, Block, Renew, Reset Devices, WhatsApp Direct),
-   Mobile 1-Tap Copy & Paste Clipboard Handlers, Custom Expiration Overlay
-   with Phone Contact (11) 98589-7774 & 4K Exporter.
+   (Protected by PIN 11985897774: Generate, Block, 1-Click Unblock, Renew, Reset Devices, WhatsApp Direct),
+   Mobile 1-Tap Copy & Paste Clipboard Handlers, Custom Expiration & Blocked
+   Overlay with Phone Contact (11) 98589-7774 & 4K Exporter.
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -51,18 +51,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAuthUI();
   }
 
-  // License Engine Initialization with Expiration Auto-Block Callback
+  // License Engine Initialization with Expiration & Instant Block/Unblock Callbacks
   if (window.LicenseSystem) {
-    LicenseSystem.init(() => {
-      SlideshowEngine.pause();
-      AudioEngine.stop();
-      updatePlayPauseButton(false);
+    LicenseSystem.init(
+      (reason) => {
+        // Expired or Blocked Callback
+        SlideshowEngine.pause();
+        AudioEngine.stop();
+        updatePlayPauseButton(false);
 
-      const modalExpired = document.getElementById('modal-license-expired');
-      if (modalExpired) modalExpired.classList.remove('hidden');
-      updateLicenseUI();
-      showToast('Sua licença está vencida! Entre em contato pelo telefone (11) 98589-7774 para renovar.', 'danger');
-    });
+        const modalExpired = document.getElementById('modal-license-expired');
+        const headerTitle = document.getElementById('expired-modal-header-title');
+        const mainTitle = document.getElementById('expired-modal-main-title');
+        const mainDesc = document.getElementById('expired-modal-main-desc');
+
+        if (reason === 'blocked') {
+          if (headerTitle) headerTitle.textContent = 'Licença Bloqueada pelo Administrador';
+          if (mainTitle) mainTitle.textContent = 'Sua licença foi BLOQUEADA pelo administrador!';
+          if (mainDesc) mainDesc.innerHTML = 'Entre em contato pelo telefone <strong style="color:var(--orange-main); font-size:18px; display:block; margin-top:6px;"><i class="fa-brands fa-whatsapp text-green"></i> (11) 98589-7774</strong> para regularizar e liberar o seu acesso.';
+          showToast('ATENÇÃO: Sua licença foi bloqueada pelo administrador! Contato: (11) 98589-7774', 'danger');
+        } else {
+          if (headerTitle) headerTitle.textContent = 'Licença Vencida - Acesso Bloqueado';
+          if (mainTitle) mainTitle.textContent = 'Sua licença está vencida!';
+          if (mainDesc) mainDesc.innerHTML = 'Entre em contato pelo telefone <strong style="color:var(--orange-main); font-size:18px; display:block; margin-top:6px;"><i class="fa-brands fa-whatsapp text-green"></i> (11) 98589-7774</strong> para adicionar sua nova licença e desbloquear o sistema.';
+          showToast('Sua licença está vencida! Entre em contato pelo telefone (11) 98589-7774 para renovar.', 'danger');
+        }
+
+        if (modalExpired) modalExpired.classList.remove('hidden');
+        updateLicenseUI();
+      },
+      () => {
+        // Unblocked Callback
+        const modalExpired = document.getElementById('modal-license-expired');
+        if (modalExpired) modalExpired.classList.add('hidden');
+        updateLicenseUI();
+        if (!AppState.music) loadStockAudioTrack();
+        SlideshowEngine.requestRender();
+        showToast('Sua licença foi DESBLOQUEADA pelo administrador! Sistema liberado.', 'success');
+      }
+    );
     updateLicenseUI();
   }
 
@@ -460,9 +487,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button class="btn btn-xs btn-orange btn-renew-cli" data-id="${cli.id}" data-name="${cli.name}" title="Renovar / Alterar Licença">
                       <i class="fa-solid fa-repeat"></i> Renovar
                     </button>
-                    <button class="btn btn-xs btn-danger-outline btn-revoke-cli" data-id="${cli.id}" title="Bloquear / Cancelar Licença">
-                      <i class="fa-solid fa-ban"></i> Bloquear
-                    </button>
+                    ${isRevoked ? `
+                      <button class="btn btn-xs btn-success btn-unrevoke-cli" data-id="${cli.id}" title="Desbloquear Licença do Cliente">
+                        <i class="fa-solid fa-lock-open"></i> Desbloquear
+                      </button>
+                    ` : `
+                      <button class="btn btn-xs btn-danger-outline btn-revoke-cli" data-id="${cli.id}" title="Bloquear Licença do Cliente">
+                        <i class="fa-solid fa-ban"></i> Bloquear
+                      </button>
+                    `}
                     <button class="btn btn-xs btn-icon-danger btn-del-cli" data-id="${cli.id}" title="Excluir Registro">
                       <i class="fa-solid fa-trash"></i>
                     </button>
@@ -511,12 +544,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.querySelectorAll('.btn-revoke-cli').forEach(b => {
       b.addEventListener('click', () => {
         const id = b.getAttribute('data-id');
-        if (confirm('Tem certeza que deseja BLOQUEAR/REVOGAR a licença deste cliente?')) {
+        if (confirm('Tem certeza que deseja BLOQUEAR a licença deste cliente?')) {
           const res = LicenseSystem.revokeClientLicense(id);
           renderCRMClientTable();
           updateLicenseUI();
           showToast(res.message, 'info');
         }
+      });
+    });
+
+    container.querySelectorAll('.btn-unrevoke-cli').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const res = LicenseSystem.unrevokeClientLicense(id);
+        renderCRMClientTable();
+        updateLicenseUI();
+        showToast(res.message, 'success');
       });
     });
 

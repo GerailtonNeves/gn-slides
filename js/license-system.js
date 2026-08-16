@@ -2,8 +2,8 @@
    GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
    (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Strict Cryptographic
-   Checksum Verification, Instant Remote License Revocation & Auto-Blocking,
-   and Full Client CRM Management (Renew, Reset Device Lock, Revoke, WhatsApp Direct).
+   Checksum Verification, Instant Remote License Revocation, 1-Click Unlocking,
+   and Full Client CRM Management (Renew, Reset Device Lock, Revoke/Unrevoke, WhatsApp Direct).
    ========================================================================== */
 
 const LicenseSystem = {
@@ -16,6 +16,7 @@ const LicenseSystem = {
   licenseData: null,
   expirationTimer: null,
   onExpiredCallback: null,
+  onUnblockedCallback: null,
 
   // Plan durations in milliseconds
   PLANS: {
@@ -27,8 +28,9 @@ const LicenseSystem = {
     'VITALICIO': { name: 'Licença Vitalícia (Sem Expiração)', ms: null }
   },
 
-  init: function(onExpiredCb) {
+  init: function(onExpiredCb, onUnblockedCb) {
     this.onExpiredCallback = onExpiredCb;
+    this.onUnblockedCallback = onUnblockedCb;
     this.loadLicenseState();
     this.startExpirationMonitor();
   },
@@ -48,7 +50,7 @@ const LicenseSystem = {
     // 2. Check CRM database
     const clients = this.getAllClients();
     const cli = clients.find(c => c.key === cleanKey);
-    if (cli && (cli.status === 'revoked' || (cli.expiresAt && Date.now() > cli.expiresAt))) return true;
+    if (cli && cli.status === 'revoked') return true;
 
     return false;
   },
@@ -83,7 +85,7 @@ const LicenseSystem = {
       planCode: planCode,
       planName: planInfo.name,
       key: key,
-      deviceId: null, // Tied on first device activation
+      deviceId: null, // Single Device binding on first activation
       activatedAt: activatedAt,
       expiresAt: expiresAt,
       status: 'active' // 'active', 'expired', 'revoked'
@@ -116,7 +118,7 @@ const LicenseSystem = {
         localStorage.setItem(this.REVOKED_KEYS_KEY, JSON.stringify(revokedList));
       } catch (e) {}
 
-      // Update current active license if renewed current machine
+      // Update active license if on current machine
       if (this.licenseData && this.licenseData.key === clients[idx].key) {
         this.licenseData.expiresAt = expiresAt;
         this.licenseData.planName = planInfo.name;
@@ -159,18 +161,51 @@ const LicenseSystem = {
         }
       } catch (e) {}
 
-      // Immediately cancel active license on this machine if matching
+      // Immediately cancel active license on current machine if matching
       if (this.licenseData && this.licenseData.key === revokedKey) {
         this.isLicensed = false;
         this.licenseData = null;
         localStorage.removeItem(this.STORAGE_KEY);
         if (typeof this.onExpiredCallback === 'function') {
-          this.onExpiredCallback();
+          this.onExpiredCallback('blocked');
         }
       }
 
       this.saveClients(clients);
-      return { success: true, message: `Licença do cliente ${clients[idx].name} foi REVOGADA e BLOQUEADA!` };
+      return { success: true, message: `Licença do cliente ${clients[idx].name} foi BLOQUEADA!` };
+    }
+    return { success: false, message: 'Cliente não encontrado.' };
+  },
+
+  unrevokeClientLicense: function(clientId) {
+    const clients = this.getAllClients();
+    const idx = clients.findIndex(c => c.id === clientId);
+    if (idx !== -1) {
+      const key = clients[idx].key;
+      clients[idx].status = 'active';
+      
+      // Restore duration if expired
+      const planInfo = this.PLANS[clients[idx].planCode] || this.PLANS['1ANO'];
+      const activatedAt = Date.now();
+      clients[idx].expiresAt = planInfo.ms ? (activatedAt + planInfo.ms) : null;
+
+      // Remove from revoked list
+      try {
+        const rawRevoked = localStorage.getItem(this.REVOKED_KEYS_KEY);
+        let revokedList = rawRevoked ? JSON.parse(rawRevoked) : [];
+        revokedList = revokedList.filter(k => k !== key);
+        localStorage.setItem(this.REVOKED_KEYS_KEY, JSON.stringify(revokedList));
+      } catch (e) {}
+
+      // Reactivate license state
+      this.activateLicense(key, clients[idx].email);
+
+      if (typeof this.onUnblockedCallback === 'function') {
+        this.onUnblockedCallback();
+      }
+
+      this.saveClients(clients);
+      return { success: true, message: `Licença do cliente ${clients[idx].name} foi DESBLOQUEADA com sucesso!` };
     }
     return { success: false, message: 'Cliente não encontrado.' };
   },
@@ -315,7 +350,7 @@ const LicenseSystem = {
   activateLicense: function(keyStr, userEmail = '') {
     const cleanKey = (keyStr || '').trim().toUpperCase();
     if (this.isKeyRevoked(cleanKey)) {
-      return { success: false, message: 'Esta chave de licença foi BLOQUEADA. Entre em contato pelo telefone (11) 98589-7774.' };
+      return { success: false, message: 'Esta chave de licença foi BLOQUEADA pelo administrador. Entre em contato pelo telefone (11) 98589-7774.' };
     }
 
     const check = this.validateKeyDetailed(cleanKey);
@@ -324,6 +359,17 @@ const LicenseSystem = {
     }
 
     const currentDevice = this.getDeviceFingerprint();
+
+    // SINGLE DEVICE BINDING ENFORCEMENT: Check if key is already bound to another device
+    const clients = this.getAllClients();
+    const existingClient = clients.find(c => c.key === cleanKey);
+    if (existingClient && existingClient.deviceId && existingClient.deviceId !== currentDevice) {
+      return {
+        success: false,
+        message: `Esta licença já está em uso em outro aparelho (${existingClient.deviceId}). Cada licença só pode ser usada em um único aparelho.`
+      };
+    }
+
     const planInfo = this.PLANS[check.planCode] || this.PLANS['VITALICIO'];
 
     const activatedAt = Date.now();
@@ -345,14 +391,15 @@ const LicenseSystem = {
     this.licenseData = data;
 
     // Register or update client in CRM DB
-    const clients = this.getAllClients();
     const existingIdx = clients.findIndex(c => c.key === data.key);
     if (existingIdx !== -1) {
       clients[existingIdx].deviceId = currentDevice;
       clients[existingIdx].status = 'active';
       this.saveClients(clients);
     } else {
-      this.registerClientRecord(check.clientName, userEmail, check.planCode, data.key);
+      const rec = this.registerClientRecord(check.clientName, userEmail, check.planCode, data.key);
+      rec.deviceId = currentDevice;
+      this.saveClients(clients);
     }
 
     this.startExpirationMonitor();
@@ -375,7 +422,7 @@ const LicenseSystem = {
           this.licenseData = null;
           localStorage.removeItem(this.STORAGE_KEY);
           if (typeof this.onExpiredCallback === 'function') {
-            this.onExpiredCallback();
+            this.onExpiredCallback('blocked');
           }
           return;
         }
@@ -388,7 +435,7 @@ const LicenseSystem = {
             this.licenseData = null;
             localStorage.removeItem(this.STORAGE_KEY);
             if (typeof this.onExpiredCallback === 'function') {
-              this.onExpiredCallback();
+              this.onExpiredCallback('expired');
             }
           }
         }
