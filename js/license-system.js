@@ -302,9 +302,9 @@ const LicenseSystem = {
 
   // Admin Key Generator for all plan types
   generateValidKey: function(clientName = 'CLIENTE', planCode = 'VITALICIO') {
-    const cleanClient = clientName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
+    const cleanClient = (clientName || 'CLIENTE').trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
     const plan = this.PLANS[planCode] ? planCode : 'VITALICIO';
-    const payload = `${plan}-${cleanClient}-${this.SECRET_SALT}`;
+    const payload = `KEY_${plan}_${cleanClient}_${this.SECRET_SALT}`;
     const checksum = this.calculateChecksum(payload);
     return `GNSLIDES-${plan}-${cleanClient}-${checksum}`;
   },
@@ -330,7 +330,7 @@ const LicenseSystem = {
     // 3. Strict format check: Must be GNSLIDES-PLANO-NOME-CHECKSUM
     const parts = key.split('-');
     if (parts.length !== 4 || parts[0] !== 'GNSLIDES') {
-      return { valid: false, message: '❌ Licença Incorreta! A chave digitada possui caracteres incorretos e não foi ativada.' };
+      return { valid: false, message: '❌ Licença Incorreta! O formato da chave deve ser GNSLIDES-PLANO-NOME-XXXX.' };
     }
 
     const planCode = parts[1];
@@ -342,10 +342,10 @@ const LicenseSystem = {
     }
 
     if (userChecksum.length !== 4) {
-      return { valid: false, message: '❌ Licença Incorreta! O código final de verificação está incorreto.' };
+      return { valid: false, message: '❌ Licença Incorreta! O código final de verificação deve ter 4 caracteres.' };
     }
 
-    // 4. VERIFY AGAINST CRM DATABASE OR CRYPTOGRAPHIC CHECKSUM
+    // 4. VERIFY AGAINST CRM DATABASE FIRST
     const clients = this.getAllClients();
     const registeredClient = clients.find(c => c.key === key);
 
@@ -356,15 +356,16 @@ const LicenseSystem = {
       return { valid: true, planCode: registeredClient.planCode, clientName: registeredClient.name };
     }
 
-    // 5. IF NOT IN CRM, VERIFY EXACT CHECKSUM MATCH
-    const expectedPayload = `${planCode}-${clientName}-${this.SECRET_SALT}`;
-    const expectedChecksum = this.calculateChecksum(expectedPayload);
+    // 5. VERIFY CRYPTOGRAPHIC CHECKSUM MATCH
+    const cleanClient = clientName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
+    const payload = `KEY_${planCode}_${cleanClient}_${this.SECRET_SALT}`;
+    const expectedChecksum = this.calculateChecksum(payload);
 
-    if (userChecksum !== expectedChecksum) {
-      return { valid: false, message: '❌ LICENÇA INCORRETA! A chave digitada possui caracteres errados e NÃO é válida.' };
+    if (userChecksum === expectedChecksum) {
+      return { valid: true, planCode: planCode, clientName: cleanClient };
     }
 
-    return { valid: true, planCode: planCode, clientName: clientName };
+    return { valid: false, message: '❌ LICENÇA INCORRETA! A chave digitada possui caracteres errados e NÃO é válida.' };
   },
 
   // STRICT LICENSE ACTIVATION HANDLER WITH SINGLE-DEVICE LOCK
