@@ -1,8 +1,8 @@
 /* ==========================================================================
    GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
-   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Strict Cryptographic
-   Checksum & Exact Character Verification (100% Zero-Tolerance for Typos),
+   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Cryptographic Checksum
+   Validation with Zero-Tolerance for Typos (Invalid Keys STRICTLY Fail & Block System),
    Instant Remote License Revocation, 1-Click Unlocking, and Full Client CRM
    Management (Renew, Reset Device Lock, Revoke/Unrevoke, WhatsApp Direct).
    ========================================================================== */
@@ -304,23 +304,22 @@ const LicenseSystem = {
   generateValidKey: function(clientName = 'CLIENTE', planCode = 'VITALICIO') {
     const cleanClient = clientName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
     const plan = this.PLANS[planCode] ? planCode : 'VITALICIO';
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const payload = `${plan}-${cleanClient}-${timestamp}-${this.SECRET_SALT}`;
+    const payload = `${plan}-${cleanClient}-${this.SECRET_SALT}`;
     const checksum = this.calculateChecksum(payload);
     return `GNSLIDES-${plan}-${cleanClient}-${checksum}`;
   },
 
-  // STRICT CHARACTER-BY-CHARACTER VALIDATION (Zero-Tolerance for Typographic Errors)
+  // STRICT CHARACTER-BY-CHARACTER VALIDATION (100% Zero-Tolerance for Typos)
   validateKeyDetailed: function(keyStr) {
     if (!keyStr || typeof keyStr !== 'string' || keyStr.trim().length === 0) {
-      return { valid: false, message: 'Digite todos os caracteres da sua chave de licença.' };
+      return { valid: false, message: '❌ Digite todos os caracteres da sua chave de licença.' };
     }
 
     const key = keyStr.trim().toUpperCase();
 
     // 1. Check if key has been revoked
     if (this.isKeyRevoked(key)) {
-      return { valid: false, message: 'Esta chave de licença foi BLOQUEADA pelo administrador. Entre em contato pelo WhatsApp (11) 98589-7774.' };
+      return { valid: false, message: '❌ Esta chave de licença foi BLOQUEADA pelo administrador. Entre em contato pelo WhatsApp (11) 98589-7774.' };
     }
 
     // 2. Master Keys for instant admin testing
@@ -331,7 +330,7 @@ const LicenseSystem = {
     // 3. Strict format check: Must be GNSLIDES-PLANO-NOME-CHECKSUM
     const parts = key.split('-');
     if (parts.length !== 4 || parts[0] !== 'GNSLIDES') {
-      return { valid: false, message: '❌ Licença Inválida! Digite exatamente todos os caracteres corretos da licença fornecida.' };
+      return { valid: false, message: '❌ Licença Incorreta! A chave digitada possui caracteres incorretos e não foi ativada.' };
     }
 
     const planCode = parts[1];
@@ -339,20 +338,30 @@ const LicenseSystem = {
     const userChecksum = parts[3];
 
     if (!this.PLANS[planCode]) {
-      return { valid: false, message: '❌ Licença Inválida! O código do plano de licença está incorreto.' };
+      return { valid: false, message: '❌ Licença Incorreta! O plano especificado na chave não existe.' };
     }
 
     if (userChecksum.length !== 4) {
-      return { valid: false, message: '❌ Licença Inválida! O código de verificação final está incorreto ou incompleto.' };
+      return { valid: false, message: '❌ Licença Incorreta! O código final de verificação está incorreto.' };
     }
 
-    // 4. Verify against CRM registered keys OR cryptographic payload
+    // 4. VERIFY AGAINST CRM DATABASE OR CRYPTOGRAPHIC CHECKSUM
     const clients = this.getAllClients();
     const registeredClient = clients.find(c => c.key === key);
 
-    if (!registeredClient) {
-      // If key is not pre-registered in DB, verify cryptographic payload match
-      // Require exact match
+    if (registeredClient) {
+      if (registeredClient.status === 'revoked') {
+        return { valid: false, message: '❌ Esta licença foi BLOQUEADA pelo administrador!' };
+      }
+      return { valid: true, planCode: registeredClient.planCode, clientName: registeredClient.name };
+    }
+
+    // 5. IF NOT IN CRM, VERIFY EXACT CHECKSUM MATCH
+    const expectedPayload = `${planCode}-${clientName}-${this.SECRET_SALT}`;
+    const expectedChecksum = this.calculateChecksum(expectedPayload);
+
+    if (userChecksum !== expectedChecksum) {
+      return { valid: false, message: '❌ LICENÇA INCORRETA! A chave digitada possui caracteres errados e NÃO é válida.' };
     }
 
     return { valid: true, planCode: planCode, clientName: clientName };
