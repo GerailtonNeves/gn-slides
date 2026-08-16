@@ -5,7 +5,8 @@
    Hardware Device Locking, Guest Lock (No Music + Watermark for Visitors),
    PRO Unlocked Mode for Paid Licensed Clients, Secret Owner CRM Panel
    (Protected by PIN 11985897774: Generate, Block, Renew, Reset Devices, WhatsApp Direct),
-   Custom Expiration Overlay with Phone Contact (11) 98589-7774 & 4K Exporter.
+   Mobile 1-Tap Copy & Paste Clipboard Handlers, Custom Expiration Overlay
+   with Phone Contact (11) 98589-7774 & 4K Exporter.
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -291,6 +292,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // --- MOBILE 1-TAP COPY & PASTE CLIPBOARD HANDLERS ---
+  const btnPasteLicenseKey = document.getElementById('btn-paste-license-key');
+  const btnPasteExpiredKey = document.getElementById('btn-paste-expired-key');
+  const btnCopyGeneratedKey = document.getElementById('btn-copy-generated-key');
+
+  if (btnPasteLicenseKey) {
+    btnPasteLicenseKey.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('input-license-key').value = text.trim().toUpperCase();
+          showToast('Chave colada com sucesso!', 'success');
+        } else {
+          showToast('Nenhum texto encontrado na área de transferência.', 'warning');
+        }
+      } catch (err) {
+        showToast('Toque e segure no campo para colar a chave.', 'info');
+      }
+    });
+  }
+
+  if (btnPasteExpiredKey) {
+    btnPasteExpiredKey.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('input-expired-new-key').value = text.trim().toUpperCase();
+          showToast('Chave colada com sucesso!', 'success');
+        } else {
+          showToast('Nenhum texto encontrado na área de transferência.', 'warning');
+        }
+      } catch (err) {
+        showToast('Toque e segure no campo para colar a chave.', 'info');
+      }
+    });
+  }
+
+  if (btnCopyGeneratedKey) {
+    btnCopyGeneratedKey.addEventListener('click', () => {
+      const val = document.getElementById('admin-generated-key-output').value;
+      if (val) {
+        navigator.clipboard.writeText(val);
+        showToast('Chave de licença copiada!', 'success');
+      }
+    });
+  }
+
   // --- SECRET OWNER ADMIN CRM PANEL (PIN 11985897774 / ADMIN) ---
   const modalClientsCRM = document.getElementById('modal-clients-crm');
   const btnOpenClientsCRM = document.getElementById('btn-open-clients-crm');
@@ -299,7 +347,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let logoClickCount = 0;
   let logoClickTimer = null;
 
-  // Secret activation: Click logo 5 times or click hidden button
   if (btnSecretAdminLogo) {
     btnSecretAdminLogo.addEventListener('click', () => {
       logoClickCount++;
@@ -428,12 +475,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       </table>
     `;
 
-    // Bind CRM action buttons
+    // Bind CRM action buttons with WhatsApp code backticks format for 1-tap mobile copying
     container.querySelectorAll('.btn-send-wa').forEach(b => {
       b.addEventListener('click', () => {
         const name = b.getAttribute('data-name');
         const key = b.getAttribute('data-key');
-        const text = encodeURIComponent(`Olá ${name}! Segue sua Chave de Licença do GN SLIDES PRO 4K:\n\n🔑 Key: ${key}\n\nAbra o sistema e clique em "Ativar PRO" para liberar todas as funções!\n\nDúvidas / Suporte WhatsApp: (11) 98589-7774`);
+        const text = encodeURIComponent(`Olá ${name}! Segue sua Chave de Licença do GN SLIDES PRO 4K:\n\n🔑 *Sua Chave PRO:* \`${key}\`\n\n👉 *Como ativar:* Toque e segure no código acima para copiar, depois abra o aplicativo e clique no botão "📋 Colar"!\n\nSuporte WhatsApp: (11) 98589-7774`);
         window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
       });
     });

@@ -834,7 +834,13 @@
               <button id="btn-admin-generate-key" class="btn btn-orange-gradient btn-xs">
                 <i class="fa-solid fa-plus"></i> Gerar & Cadastrar Licença
               </button>
-              <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800; flex:1;">
+
+              <div class="input-with-button" style="flex:1;">
+                <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800;" autocapitalize="characters" spellcheck="false">
+                <button id="btn-copy-generated-key" class="btn btn-blue-outline btn-xs" type="button" title="Copiar chave gerada">
+                  <i class="fa-solid fa-copy"></i> Copiar
+                </button>
+              </div>
             </div>
           </div>
 
@@ -853,7 +859,7 @@
       </div>
     </div>
 
-    <!-- MODAL: ATIVAÇÃO DE LICENÇA PRO PARA O CLIENTE FINAL (LIMPO SEM GERADOR) -->
+    <!-- MODAL: ATIVAÇÃO DE LICENÇA PRO PARA O CLIENTE FINAL (COM BOTAO COLAR DO CELULAR) -->
     <div id="modal-license" class="modal-overlay hidden">
       <div class="modal-card glass-modal modal-md">
         <div class="modal-header">
@@ -869,14 +875,19 @@
             <i class="fa-solid fa-shield-halved"></i>
             <div>
               <strong id="license-status-title">Status: Versão de Demonstração (Grátis)</strong>
-              <p id="license-status-desc" class="margin-top-xs">Digite sua Chave de Licença PRO para remover a marca d'água, liberar músicas e exportação 4K ilimitada!</p>
+              <p id="license-status-desc" class="margin-top-xs">Digite ou cole sua Chave de Licença PRO para remover a marca d'água, liberar músicas e exportação 4K ilimitada!</p>
               <div id="license-device-id-info" class="margin-top-xs" style="font-family:var(--font-mono); font-size:11px; color:var(--orange-main);">Dispositivo Atual: DEV-1234</div>
             </div>
           </div>
 
           <div class="form-group margin-top-md">
-            <label>Digite sua Chave de Licença (License Key)</label>
-            <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-1ANO-MARCOS-8A4F" class="form-input" style="font-family: var(--font-mono); font-size:15px;">
+            <label>Sua Chave de Licença (License Key)</label>
+            <div class="input-with-button">
+              <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-1ANO-MARCOS-8A4F" class="form-input" style="font-family: var(--font-mono); font-size:15px;" autocapitalize="characters" spellcheck="false" autocorrect="off">
+              <button id="btn-paste-license-key" class="btn btn-blue-outline btn-sm" type="button" title="Colar chave copiada do WhatsApp">
+                <i class="fa-solid fa-paste"></i> Colar
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -901,7 +912,7 @@
       </div>
     </div>
 
-    <!-- MODAL: LICENÇA EXPIRADA (BLOQUEIO AUTOMÁTICO COM CONTATO 11985897774) -->
+    <!-- MODAL: LICENÇA EXPIRADA (BLOQUEIO AUTOMÁTICO COM CONTATO 11985897774 E BOTAO COLAR CHAVE) -->
     <div id="modal-license-expired" class="modal-overlay hidden" style="z-index: 5000;">
       <div class="modal-card glass-modal modal-md" style="border: 2px solid var(--danger-color);">
         <div class="modal-header" style="background: rgba(239, 68, 68, 0.12);">
@@ -926,8 +937,13 @@
           </a>
 
           <div class="form-group margin-top-md" style="text-align:left;">
-            <label>Digite sua Nova Chave de Licença</label>
-            <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-NOME-1234" class="form-input" style="font-family:var(--font-mono);">
+            <label>Digite ou Cole sua Nova Chave de Licença</label>
+            <div class="input-with-button margin-top-xs">
+              <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-NOME-1234" class="form-input" style="font-family:var(--font-mono);" autocapitalize="characters" spellcheck="false" autocorrect="off">
+              <button id="btn-paste-expired-key" class="btn btn-blue-outline btn-sm" type="button" title="Colar chave copiada">
+                <i class="fa-solid fa-paste"></i> Colar
+              </button>
+            </div>
           </div>
         </div>
 
