@@ -3,8 +3,9 @@
    Binds AuthSystem, Time-based License System (5 Min, 24h, 1 Mês, 6 Meses,
    1 Ano, Vitalício), Slide Duration Controls (1.5s, 2s, 3s, 5s, Custom),
    Hardware Device Locking, Guest Lock (No Music + Watermark for Visitors),
-   PRO Unlocked Mode for Paid Licensed Clients, CRM Client Management Dashboard,
-   Zero-RAM Mobile Photo Loader (URL.createObjectURL + Blob Revocation) & 4K Exporter.
+   PRO Unlocked Mode for Paid Licensed Clients, Secret Owner CRM Panel
+   (Protected by PIN 11985897774: Generate, Block, Renew, Reset Devices, WhatsApp Direct),
+   Custom Expiration Overlay with Phone Contact (11) 98589-7774 & 4K Exporter.
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const modalExpired = document.getElementById('modal-license-expired');
       if (modalExpired) modalExpired.classList.remove('hidden');
       updateLicenseUI();
-      showToast('ATENÇÃO: O prazo da sua licença venceu! O sistema foi bloqueado.', 'danger');
+      showToast('Sua licença está vencida! Entre em contato pelo telefone (11) 98589-7774 para renovar.', 'danger');
     });
     updateLicenseUI();
   }
@@ -290,15 +291,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // --- CLIENT CRM MANAGEMENT DASHBOARD ---
+  // --- SECRET OWNER ADMIN CRM PANEL (PIN 11985897774 / ADMIN) ---
   const modalClientsCRM = document.getElementById('modal-clients-crm');
   const btnOpenClientsCRM = document.getElementById('btn-open-clients-crm');
+  const btnSecretAdminLogo = document.getElementById('btn-secret-admin-logo');
+
+  let logoClickCount = 0;
+  let logoClickTimer = null;
+
+  // Secret activation: Click logo 5 times or click hidden button
+  if (btnSecretAdminLogo) {
+    btnSecretAdminLogo.addEventListener('click', () => {
+      logoClickCount++;
+      if (logoClickTimer) clearTimeout(logoClickTimer);
+      logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 3000);
+
+      if (logoClickCount >= 5) {
+        logoClickCount = 0;
+        unlockOwnerAdminPanel();
+      }
+    });
+  }
 
   if (btnOpenClientsCRM) {
     btnOpenClientsCRM.addEventListener('click', () => {
+      unlockOwnerAdminPanel();
+    });
+  }
+
+  function unlockOwnerAdminPanel() {
+    const isUnlocked = sessionStorage.getItem('gn_slides_owner_unlocked');
+    if (isUnlocked === 'true') {
+      btnOpenClientsCRM.classList.remove('hidden');
       renderCRMClientTable();
       modalClientsCRM.classList.remove('hidden');
-    });
+      return;
+    }
+
+    const pin = prompt('🔐 DIGITE A SENHA DO DONO DO SISTEMA PARA ACESSAR O PAINEL DE LICENÇAS:');
+    if (pin === '11985897774' || pin === 'admin') {
+      sessionStorage.setItem('gn_slides_owner_unlocked', 'true');
+      btnOpenClientsCRM.classList.remove('hidden');
+      renderCRMClientTable();
+      modalClientsCRM.classList.remove('hidden');
+      showToast('Painel Exclusivo do Dono Desbloqueado!', 'success');
+    } else if (pin !== null) {
+      showToast('Senha de administrador incorreta.', 'danger');
+    }
   }
 
   function renderCRMClientTable() {
@@ -310,7 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="empty-state padding-lg" style="text-align:center;">
           <i class="fa-solid fa-users text-orange" style="font-size:36px; margin-bottom:10px;"></i>
           <h4>Nenhum Cliente Cadastrado Ainda</h4>
-          <p class="info-text">Quando você gerar uma chave no "Painel do Dono" ou um cliente ativar uma licença, o registro aparecerá aqui!</p>
+          <p class="info-text">Use a caixa acima para gerar e cadastrar chaves para seus clientes!</p>
         </div>`;
       return;
     }
@@ -371,11 +410,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button class="btn btn-xs btn-secondary btn-reset-dev" data-id="${cli.id}" title="Desvincular Aparelho Antigo">
                       <i class="fa-solid fa-rotate-left"></i> Liberar PC
                     </button>
-                    <button class="btn btn-xs btn-orange btn-renew-cli" data-id="${cli.id}" data-name="${cli.name}" title="Renovar Licença">
+                    <button class="btn btn-xs btn-orange btn-renew-cli" data-id="${cli.id}" data-name="${cli.name}" title="Renovar / Alterar Licença">
                       <i class="fa-solid fa-repeat"></i> Renovar
                     </button>
                     <button class="btn btn-xs btn-danger-outline btn-revoke-cli" data-id="${cli.id}" title="Bloquear / Cancelar Licença">
-                      <i class="fa-solid fa-ban"></i>
+                      <i class="fa-solid fa-ban"></i> Bloquear
                     </button>
                     <button class="btn btn-xs btn-icon-danger btn-del-cli" data-id="${cli.id}" title="Excluir Registro">
                       <i class="fa-solid fa-trash"></i>
@@ -394,7 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       b.addEventListener('click', () => {
         const name = b.getAttribute('data-name');
         const key = b.getAttribute('data-key');
-        const text = encodeURIComponent(`Olá ${name}! Segue sua Chave de Licença do GN SLIDES PRO 4K:\n\n🔑 Key: ${key}\n\nAbra o sistema e clique em "Ativar PRO" para liberar todas as funções!`);
+        const text = encodeURIComponent(`Olá ${name}! Segue sua Chave de Licença do GN SLIDES PRO 4K:\n\n🔑 Key: ${key}\n\nAbra o sistema e clique em "Ativar PRO" para liberar todas as funções!\n\nDúvidas / Suporte WhatsApp: (11) 98589-7774`);
         window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
       });
     });
@@ -496,16 +535,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnAdminGenerateKey) {
     btnAdminGenerateKey.addEventListener('click', () => {
-      const name = document.getElementById('admin-client-name').value || 'CLIENT';
-      const plan = document.getElementById('admin-select-plan-duration').value || 'VITALICIO';
+      const name = document.getElementById('admin-client-name').value || 'CLIENTE';
+      const email = document.getElementById('admin-client-email').value || '';
+      const plan = document.getElementById('admin-select-plan-duration').value || '1ANO';
 
       const key = LicenseSystem.generateValidKey(name, plan);
       document.getElementById('admin-generated-key-output').value = key;
       
       // Auto register generated key in CRM DB
-      LicenseSystem.registerClientRecord(name, '', plan, key);
+      LicenseSystem.registerClientRecord(name, email, plan, key);
+      renderCRMClientTable();
 
-      showToast(`Nova chave gerada e cadastrada para o cliente ${name}!`, 'info');
+      showToast(`Chave gerada e cadastrada para o cliente ${name}!`, 'info');
     });
   }
 
@@ -595,7 +636,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Ultra-safe mobile photo loader: Uses Blob URLs + immediate revocation + max 1280px canvas resize
-  // Guaranteed ZERO Chrome Mobile RAM crash ("Ah, não!") on Android/iOS devices!
   function compressAndResizePhoto(file, maxWidth = 1280, maxHeight = 1280, quality = 0.80) {
     return new Promise((resolve) => {
       const blobUrl = URL.createObjectURL(file);
@@ -659,11 +699,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         AppState.slides.push(newSlide);
       }
-      // Micro-pause to allow mobile Garbage Collector to run
       await new Promise(r => setTimeout(r, 60));
     }
 
-    // Reset input value to release mobile OS file handle references
     if (inputPhotos) inputPhotos.value = '';
 
     await syncProjectToEngine();

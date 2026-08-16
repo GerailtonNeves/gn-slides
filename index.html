@@ -24,7 +24,7 @@
     <!-- TOP HEADER NAVBAR -->
     <header class="navbar glass-nav">
       <div class="brand">
-        <div class="logo-icon">
+        <div class="logo-icon" id="btn-secret-admin-logo" title="GN SLIDES PRO">
           <i class="fa-solid fa-bolt-lightning"></i>
         </div>
         <div class="logo-text">
@@ -42,8 +42,9 @@
           <button id="btn-logout" class="btn-xs btn-danger-outline hidden" title="Sair da Conta"><i class="fa-solid fa-power-off"></i></button>
         </div>
 
-        <button id="btn-open-clients-crm" class="btn btn-secondary" title="Painel de Gestão de Clientes">
-          <i class="fa-solid fa-users-gear text-orange"></i> Clientes
+        <!-- Secret Admin CRM Button (Only unlocked with Owner Password 11985897774) -->
+        <button id="btn-open-clients-crm" class="btn btn-secondary hidden" title="Painel do Dono - Gestão de Licenças">
+          <i class="fa-solid fa-user-shield text-orange"></i> Painel do Dono
         </button>
 
         <button id="btn-activate-license" class="btn btn-secondary" title="Ativar Licença PRO">
@@ -792,36 +793,67 @@
       </div>
     </div>
 
-    <!-- MODAL: PAINEL DE GESTÃO DE CLIENTES & LICENÇAS (CRM ADMIN) -->
+    <!-- MODAL: PAINEL DO DONO (GERENCIADOR & GERADOR DE LICENÇAS - SECRET OWNER ONLY) -->
     <div id="modal-clients-crm" class="modal-overlay hidden">
       <div class="modal-card glass-modal" style="max-width: 950px;">
-        <div class="modal-header">
+        <div class="modal-header" style="background: rgba(2, 132, 199, 0.12);">
           <div class="modal-title">
-            <i class="fa-solid fa-users-gear text-orange" style="font-size:22px;"></i>
-            <h3>Painel de Gestão de Clientes & Licenças (CRM Admin)</h3>
+            <i class="fa-solid fa-user-shield text-orange" style="font-size:22px;"></i>
+            <h3>Painel Exclusivo do Dono - Gerador & Gestão de Licenças</h3>
           </div>
           <button class="btn-close-modal" id="btn-close-crm"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <div class="modal-body" style="gap:16px;">
-          <div class="info-card-blue">
-            <i class="fa-solid fa-circle-info text-cyan"></i>
-            <span>Gerencie todas as licenças dos seus clientes, desvincule aparelhos antigos, renove planos ou cancele licenças com 1 clique!</span>
+          <!-- Section 1: Key Generator -->
+          <div class="form-section-box" style="background: rgba(2, 132, 199, 0.05);">
+            <h4 class="section-title"><i class="fa-solid fa-key text-cyan"></i> Criar Nova Licença de Cliente</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;" class="margin-top-xs">
+              <div class="form-group">
+                <label>Nome do Cliente</label>
+                <input type="text" id="admin-client-name" placeholder="Ex: MARCOS" class="form-input" value="CLIENTE">
+              </div>
+              <div class="form-group">
+                <label>E-mail do Cliente (Opcional)</label>
+                <input type="email" id="admin-client-email" placeholder="cliente@email.com" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Prazo de Validade</label>
+                <select id="admin-select-plan-duration" class="form-select">
+                  <option value="5MIN">⏱️ 5 Minutos (Teste Rápido)</option>
+                  <option value="24H">⏳ 24 Horas (Teste 1 Dia)</option>
+                  <option value="1MES">📅 1 Mês (30 Dias)</option>
+                  <option value="6MESES">🗓️ 6 Meses (180 Dias)</option>
+                  <option value="1ANO" selected>👑 1 Ano (365 Dias)</option>
+                  <option value="VITALICIO">♾️ Vitalício (Sem Expiração)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center;" class="margin-top-xs">
+              <button id="btn-admin-generate-key" class="btn btn-orange-gradient btn-xs">
+                <i class="fa-solid fa-plus"></i> Gerar & Cadastrar Licença
+              </button>
+              <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800; flex:1;">
+            </div>
           </div>
 
-          <!-- List of Clients Table/Cards -->
-          <div id="crm-clients-table-container" style="overflow-x:auto; max-height:450px;">
+          <!-- Section 2: Manage Registered Client Licenses -->
+          <div class="section-title-bar margin-top-xs">
+            <h4><i class="fa-solid fa-users text-orange"></i> Licenças de Clientes Cadastradas</h4>
+          </div>
+          <div id="crm-clients-table-container" style="overflow-x:auto; max-height:380px;">
             <!-- Dynamically populated table -->
           </div>
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-secondary" id="btn-close-crm-footer">Fechar</button>
+          <button class="btn btn-secondary" id="btn-close-crm-footer">Fechar Painel</button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL: ATIVAÇÃO DE LICENÇA PRO & GERADOR ADMIN TEMPORAL -->
+    <!-- MODAL: ATIVAÇÃO DE LICENÇA PRO PARA O CLIENTE FINAL (LIMPO SEM GERADOR) -->
     <div id="modal-license" class="modal-overlay hidden">
       <div class="modal-card glass-modal modal-md">
         <div class="modal-header">
@@ -837,68 +869,45 @@
             <i class="fa-solid fa-shield-halved"></i>
             <div>
               <strong id="license-status-title">Status: Versão de Demonstração (Grátis)</strong>
-              <p id="license-status-desc" class="margin-top-xs">Digite sua Chave de Licença PRO para remover a marca d'água e liberar exportação 4K ilimitada!</p>
+              <p id="license-status-desc" class="margin-top-xs">Digite sua Chave de Licença PRO para remover a marca d'água, liberar músicas e exportação 4K ilimitada!</p>
               <div id="license-device-id-info" class="margin-top-xs" style="font-family:var(--font-mono); font-size:11px; color:var(--orange-main);">Dispositivo Atual: DEV-1234</div>
             </div>
           </div>
 
-          <div class="form-group margin-top-sm">
-            <label>Sua Chave de Ativação (License Key)</label>
-            <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-5MIN-MARCOS-ABCD" class="form-input">
+          <div class="form-group margin-top-md">
+            <label>Digite sua Chave de Licença (License Key)</label>
+            <input type="text" id="input-license-key" placeholder="Ex: GNSLIDES-1ANO-MARCOS-8A4F" class="form-input" style="font-family: var(--font-mono); font-size:15px;">
           </div>
 
           <div class="form-group">
-            <label>E-mail do Comprador (Opcional)</label>
+            <label>Seu E-mail do Cadastro (Opcional)</label>
             <input type="email" id="input-license-email" placeholder="seu-email@dominio.com" class="form-input">
           </div>
 
-          <!-- Secret Admin Key Generator Toggle with Time Plans -->
-          <div class="form-section-box margin-top-sm" style="background: rgba(2, 132, 199, 0.05);">
-            <h4 class="section-title"><i class="fa-solid fa-user-gear text-cyan"></i> Painel do Dono (Gerador de Chaves Temporais)</h4>
-            <p class="info-text">Escolha a duração do plano e gere chaves bloqueadas por dispositivo!</p>
-
-            <div class="form-group">
-              <label>Nome do Cliente</label>
-              <input type="text" id="admin-client-name" placeholder="Ex: MARCOS" class="form-input" value="CLIENTE">
-            </div>
-
-            <div class="form-group">
-              <label>Prazo de Validade da Licença</label>
-              <select id="admin-select-plan-duration" class="form-select">
-                <option value="5MIN">⏱️ 5 Minutos (Teste Rápido)</option>
-                <option value="24H">⏳ 24 Horas (Teste de 1 Dia)</option>
-                <option value="1MES">📅 1 Mês (30 Dias)</option>
-                <option value="6MESES">🗓️ 6 Meses (180 Dias)</option>
-                <option value="1ANO">👑 1 Ano (365 Dias)</option>
-                <option value="VITALICIO">♾️ Vitalício (Sem Expiração)</option>
-              </select>
-            </div>
-
-            <button id="btn-admin-generate-key" class="btn btn-blue-outline btn-xs margin-top-xs">
-              <i class="fa-solid fa-key"></i> Gerar Chave do Plano Selecionado
-            </button>
-
-            <div class="form-group margin-top-xs">
-              <input type="text" id="admin-generated-key-output" readonly class="form-input" placeholder="Chave Gerada Aparecerá Aqui..." style="font-family: var(--font-mono); font-weight:800;">
+          <div class="info-card-blue margin-top-sm" style="background: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.3);">
+            <i class="fa-brands fa-whatsapp text-orange" style="font-size:20px;"></i>
+            <div>
+              <span style="color:var(--text-main); font-weight:700;">Ainda não possui uma licença?</span>
+              <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Entre em contato pelo WhatsApp <strong>(11) 98589-7774</strong> para comprar sua licença!</p>
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button id="btn-submit-activate-key" class="btn btn-orange-gradient">
+          <button id="btn-submit-activate-key" class="btn btn-orange-gradient" style="width:100%;">
             <i class="fa-solid fa-check"></i> Ativar Licença PRO Agora
           </button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL: LICENÇA EXPIRADA (BLOQUEIO AUTOMÁTICO DO SISTEMA) -->
+    <!-- MODAL: LICENÇA EXPIRADA (BLOQUEIO AUTOMÁTICO COM CONTATO 11985897774) -->
     <div id="modal-license-expired" class="modal-overlay hidden" style="z-index: 5000;">
       <div class="modal-card glass-modal modal-md" style="border: 2px solid var(--danger-color);">
         <div class="modal-header" style="background: rgba(239, 68, 68, 0.12);">
           <div class="modal-title">
             <i class="fa-solid fa-lock text-danger" style="font-size:24px; color:var(--danger-color);"></i>
-            <h3 style="color:var(--danger-color);">Acesso Bloqueado - Licença Expirada</h3>
+            <h3 style="color:var(--danger-color);">Licença Vencida - Acesso Bloqueado</h3>
           </div>
         </div>
 
@@ -907,20 +916,24 @@
             <i class="fa-solid fa-clock-rotate-left"></i>
           </div>
 
-          <h4 style="font-size:20px; font-weight:800; color:var(--text-main);">O prazo da sua licença venceu!</h4>
-          <p class="info-text margin-top-xs" style="font-size:14px;">
-            O tempo de teste ou o período do seu plano finalizou. Digite uma nova Chave de Licença válida abaixo para desbloquear o sistema imediatamente.
+          <h4 style="font-size:22px; font-weight:800; color:var(--text-main);">Sua licença está vencida!</h4>
+          <p class="info-text margin-top-xs" style="font-size:15px; color:#e2e8f0; line-height:1.5;">
+            Entre em contato pelo telefone <strong style="color:var(--orange-main); font-size:18px; display:block; margin-top:6px;"><i class="fa-brands fa-whatsapp text-green"></i> (11) 98589-7774</strong> para adicionar sua nova licença e desbloquear o sistema.
           </p>
 
+          <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Minha%20licença%20do%20GN%20SLIDES%20PRO%20venceu,%20gostaria%20de%20adquirir%20uma%20nova%20licença." target="_blank" class="btn btn-orange-gradient margin-top-sm" style="width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; text-decoration:none; font-weight:700;">
+            <i class="fa-brands fa-whatsapp" style="font-size:20px; color:#25D366;"></i> Chamar no WhatsApp: (11) 98589-7774
+          </a>
+
           <div class="form-group margin-top-md" style="text-align:left;">
-            <label>Nova Chave de Licença</label>
-            <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-CLIENTE-1234" class="form-input" style="font-family:var(--font-mono);">
+            <label>Digite sua Nova Chave de Licença</label>
+            <input type="text" id="input-expired-new-key" placeholder="Ex: GNSLIDES-1ANO-NOME-1234" class="form-input" style="font-family:var(--font-mono);">
           </div>
         </div>
 
         <div class="modal-footer" style="justify-content:center;">
           <button id="btn-submit-expired-key" class="btn btn-orange-gradient" style="width:100%;">
-            <i class="fa-solid fa-key"></i> Desbloquear Sistema Agora
+            <i class="fa-solid fa-key"></i> Ativar Nova Licença e Desbloquear
           </button>
         </div>
       </div>
