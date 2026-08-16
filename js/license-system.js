@@ -1,10 +1,9 @@
 /* ==========================================================================
    GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
-   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Deterministic Bitwise
-   Checksum Validation (100% Symmetric Across All Mobile & Desktop Browsers),
-   Instant Remote License Revocation, 1-Click Unlocking, and Full Client CRM
-   Management (Renew, Reset Device Lock, Revoke/Unrevoke, WhatsApp Direct).
+   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Robust WhatsApp Copy
+   String Sanitization (Removes backticks, quotes, spaces & labels), 100% Symmetric
+   Bitwise Checksum Validation, Instant Remote License Revocation & 1-Click Unlocking.
    ========================================================================== */
 
 const LicenseSystem = {
@@ -36,10 +35,26 @@ const LicenseSystem = {
     this.startExpirationMonitor();
   },
 
+  // Robust String Sanitizer for Mobile WhatsApp Copy/Paste
+  cleanLicenseKeyString: function(rawStr) {
+    if (!rawStr || typeof rawStr !== 'string') return '';
+    
+    // 1. Remove backticks, quotes, invisible spaces & whitespace
+    let cleaned = rawStr.replace(/[`"'’‘“”\u00A0\u200B\uFEFF]/g, '').trim().toUpperCase();
+
+    // 2. Extract GNSLIDES-XXXX-YYYY-ZZZZ pattern if copied with surrounding text
+    const match = cleaned.match(/GNSLIDES-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+/);
+    if (match) {
+      return match[0];
+    }
+
+    return cleaned;
+  },
+
   // --- REVOCATION CHECKER ---
   isKeyRevoked: function(key) {
     if (!key || typeof key !== 'string') return false;
-    const cleanKey = key.trim().toUpperCase();
+    const cleanKey = this.cleanLicenseKeyString(key);
 
     // 1. Check global revoked list
     try {
@@ -307,18 +322,17 @@ const LicenseSystem = {
   generateValidKey: function(clientName = 'CLIENTE', planCode = 'VITALICIO') {
     const cleanClient = (clientName || 'CLIENTE').trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
     const plan = this.PLANS[planCode] ? planCode : 'VITALICIO';
-    const payload = `GNSLIDES_${plan}_${cleanClient}_${this.SECRET_SALT}`;
+    const payload = `${plan}_${cleanClient}_${this.SECRET_SALT}`;
     const checksum = this.calculateChecksum(payload);
     return `GNSLIDES-${plan}-${cleanClient}-${checksum}`;
   },
 
   // STRICT CHARACTER-BY-CHARACTER VALIDATION (100% Zero-Tolerance for Typos)
   validateKeyDetailed: function(keyStr) {
-    if (!keyStr || typeof keyStr !== 'string' || keyStr.trim().length === 0) {
+    const key = this.cleanLicenseKeyString(keyStr);
+    if (!key || key.length === 0) {
       return { valid: false, message: '❌ Digite todos os caracteres da sua chave de licença.' };
     }
-
-    const key = keyStr.trim().toUpperCase();
 
     // 1. Check if key has been revoked
     if (this.isKeyRevoked(key)) {
@@ -333,7 +347,7 @@ const LicenseSystem = {
     // 3. Strict format check: Must be GNSLIDES-PLANO-NOME-CHECKSUM
     const parts = key.split('-');
     if (parts.length !== 4 || parts[0] !== 'GNSLIDES') {
-      return { valid: false, message: '❌ Licença Incorreta! A chave digitada possui caracteres incorretos.' };
+      return { valid: false, message: '❌ Licença Incorreta! O formato da chave deve ser GNSLIDES-PLANO-NOME-XXXX.' };
     }
 
     const planCode = parts[1];
@@ -359,9 +373,9 @@ const LicenseSystem = {
       return { valid: true, planCode: registeredClient.planCode, clientName: registeredClient.name };
     }
 
-    // 5. DETERMINISTIC CRYPTOGRAPHIC CHECKSUM VERIFICATION (100% Match with generateValidKey)
+    // 5. DETERMINISTIC CRYPTOGRAPHIC CHECKSUM VERIFICATION (100% Symmetric with generateValidKey)
     const cleanClient = clientName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'CLIENTE';
-    const payload = `GNSLIDES_${planCode}_${cleanClient}_${this.SECRET_SALT}`;
+    const payload = `${planCode}_${cleanClient}_${this.SECRET_SALT}`;
     const expectedChecksum = this.calculateChecksum(payload);
 
     if (userChecksum === expectedChecksum) {
@@ -373,11 +387,10 @@ const LicenseSystem = {
 
   // STRICT LICENSE ACTIVATION HANDLER WITH SINGLE-DEVICE LOCK
   activateLicense: function(keyStr, userEmail = '') {
-    if (!keyStr || typeof keyStr !== 'string' || keyStr.trim().length === 0) {
+    const cleanKey = this.cleanLicenseKeyString(keyStr);
+    if (!cleanKey || cleanKey.length === 0) {
       return { success: false, message: '❌ Digite todos os caracteres da chave de licença.' };
     }
-
-    const cleanKey = keyStr.trim().toUpperCase();
 
     // Rule 1: Instant Revocation Check
     if (this.isKeyRevoked(cleanKey)) {
