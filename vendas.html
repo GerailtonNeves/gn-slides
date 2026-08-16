@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GN SLIDES PRO 4K - Crie Slideshows e Vídeos em 4K com Música</title>
+  <meta name="description" content="Transforme suas fotos em vídeos cinematográficos em 4K Ultra HD com música. Ideal para fotógrafos, igrejas, festas, imobiliárias e eventos.">
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-dark: #070b14;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --border-blue: rgba(2, 132, 199, 0.3);
+      --blue-glow: #0284c7;
+      --cyan-bright: #38bdf8;
+      --orange-main: #f97316;
+      --orange-glow: #fb923c;
+      --yellow-gold: #f59e0b;
+      --green-wa: #25D366;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: var(--font-body);
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #0f172a 0%, #070b14 100%);
+      color: var(--text-main);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* HEADER NAVBAR */
+    .nav-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: rgba(7, 11, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-logo i {
+      font-size: 26px;
+      color: var(--orange-main);
+      filter: drop-shadow(0 0 8px var(--orange-main));
+    }
+
+    .brand-logo h1 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-logo span {
+      background: linear-gradient(135deg, var(--orange-main), var(--yellow-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .btn-wa {
+      background: #25D366;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
+    }
+
+    .btn-wa:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(37, 211, 102, 0.6);
+    }
+
+    .btn-orange {
+      background: linear-gradient(135deg, var(--orange-main), var(--orange-glow));
+      color: #fff;
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+    }
+
+    .btn-orange:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(249, 115, 22, 0.7);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--cyan-bright);
+      color: var(--cyan-bright);
+      background: transparent;
+    }
+
+    .btn-outline:hover {
+      background: rgba(56, 189, 248, 0.1);
+      color: #fff;
+    }
+
+    /* HERO SECTION */
+    .hero {
+      padding: 150px 5% 80px 5%;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(2, 132, 199, 0.15);
+      border: 1px solid var(--border-blue);
+      padding: 6px 18px;
+      border-radius: 50px;
+      color: var(--cyan-bright);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hero h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .hero h2 span {
+      background: linear-gradient(135deg, var(--orange-main), var(--yellow-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-muted);
+      max-width: 780px;
+      margin: 0 auto 36px auto;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-cta-group .btn {
+      padding: 16px 36px;
+      font-size: 16px;
+    }
+
+    /* PREVIEW CONTAINER */
+    .preview-box {
+      margin-top: 50px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-blue);
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(2, 132, 199, 0.2);
+      position: relative;
+    }
+
+    .preview-box img {
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+    }
+
+    /* FEATURES GRID */
+    .section-container {
+      padding: 80px 5%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-title h3 {
+      font-family: var(--font-heading);
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 30px;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--blue-glow);
+      box-shadow: 0 10px 30px rgba(2, 132, 199, 0.2);
+    }
+
+    .feature-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: rgba(2, 132, 199, 0.15);
+      color: var(--cyan-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h4 {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* TARGET AUDIENCE SECTION */
+    .audience-box {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(7, 11, 20, 0.95));
+      border: 1px solid var(--border-blue);
+      border-radius: 24px;
+      padding: 50px 30px;
+    }
+
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .audience-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .audience-item i {
+      font-size: 32px;
+      color: var(--orange-main);
+      margin-bottom: 12px;
+    }
+
+    .audience-item h5 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .audience-item p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* PRICING SECTION */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .price-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 36px 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .price-card.featured {
+      border: 2px solid var(--orange-main);
+      background: rgba(249, 115, 22, 0.06);
+      box-shadow: 0 0 35px rgba(249, 115, 22, 0.25);
+      transform: scale(1.03);
+    }
+
+    .popular-tag {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--orange-main), var(--yellow-gold));
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 4px 16px;
+      border-radius: 50px;
+      letter-spacing: 0.5px;
+    }
+
+    .price-header h4 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .price-amount {
+      margin: 20px 0;
+    }
+
+    .price-amount .currency {
+      font-size: 18px;
+      color: var(--text-muted);
+    }
+
+    .price-amount .val {
+      font-family: var(--font-heading);
+      font-size: 42px;
+      font-weight: 900;
+      color: var(--text-main);
+    }
+
+    .price-amount .period {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .price-features {
+      list-style: none;
+      margin: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .price-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .price-features li i {
+      color: #10b981;
+    }
+
+    /* FAQ ACCORDION */
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      padding: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-answer {
+      padding: 0 20px 20px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+      display: none;
+    }
+
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+
+    .faq-item.active .faq-question i {
+      transform: rotate(180deg);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 40px 5%;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* STICKY FLOATING WHATSAPP BUTTON */
+    .float-wa {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50px;
+      background: #25D366;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      box-shadow: 0 10px 25px rgba(37, 211, 102, 0.5);
+      z-index: 2000;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .float-wa:hover {
+      transform: scale(1.1);
+      box-shadow: 0 15px 35px rgba(37, 211, 102, 0.7);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR HEADER -->
+  <header class="nav-header">
+    <a href="index.html" class="brand-logo">
+      <i class="fa-solid fa-bolt-lightning"></i>
+      <h1>GN SLIDES <span>PRO 4K</span></h1>
+    </a>
+    <div class="nav-actions">
+      <a href="index.html" class="btn btn-outline"><i class="fa-solid fa-play"></i> Testar o App</a>
+      <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Gostaria%20de%20comprar%20uma%20licença%20do%20GN%20SLIDES%20PRO%204K" target="_blank" class="btn btn-wa">
+        <i class="fa-brands fa-whatsapp"></i> (11) 98589-7774
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO BANNER -->
+  <section class="hero">
+    <div class="badge-pill">
+      <i class="fa-solid fa-crown"></i> O Criador de Slideshows #1 do Brasil
+    </div>
+    <h2>Transforme Suas Fotos em <span>Vídeos Incríveis em 4K</span> com Música!</h2>
+    <p>Crie apresentações emocionantes e profissionais de fotos com música de fundo, abertura personalizada e transições automáticas para TV, YouTube ou Celular (Reels/TikTok) em poucos segundos.</p>
+    
+    <div class="hero-cta-group">
+      <a href="#planos" class="btn btn-orange">
+        <i class="fa-solid fa-key"></i> Garantir Minha Licença Agora
+      </a>
+      <a href="index.html" class="btn btn-outline">
+        <i class="fa-solid fa-laptop"></i> Experimentar Grátis no Navegador
+      </a>
+    </div>
+
+    <!-- PREVIEW HERO IMAGE -->
+    <div class="preview-box">
+      <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80" alt="GN SLIDES PRO 4K Studio Preview">
+    </div>
+  </section>
+
+  <!-- FEATURES GRID -->
+  <section class="section-container">
+    <div class="section-title">
+      <h3>Recursos Exclusivos de Nível Profissional</h3>
+      <p>Tudo o que você precisa para emocionar seus clientes e criar vídeos perfeitos sem complicação</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-tv"></i></div>
+        <h4>Exportação 4K Ultra HD MP4</h4>
+        <p>Gere vídeos em altíssima resolução 4K (3840x2160) ou Full HD 1080p prontos para rodar em Smart TVs, projetores ou redes sociais.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-music"></i></div>
+        <h4>Música de Fundo & Áudio HQ</h4>
+        <p>Faça upload das suas músicas favoritas em MP3/WAV ou use nossa biblioteca integrada com ajuste de volume e efeito Fade Out suave.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+        <h4>Formatos 16:9, 9:16 e 1:1</h4>
+        <p>Alterne com 1 clique para criar vídeos na horizontal para TV/YouTube ou na vertical para Instagram Reels, Stories e TikTok.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-film"></i></div>
+        <h4>Abertura & Encerramento</h4>
+        <p>Crie telas de abertura personalizadas com nomes, títulos e legendas, e termine com frases de agradecimento e momentos especiais.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <h4>Efeito Pan & Zoom (Ken Burns)</h4>
+        <p>Efeitos de transição variados automáticos e movimento suave de câmera que dão vida dinâmica a todas as suas fotos estáticas.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+        <h4>Sem Instalação (100% Online)</h4>
+        <p>Funciona direto no seu navegador web, no computador ou no celular Android/iPhone, sem ocupar espaço no seu HD.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TARGET AUDIENCE -->
+  <section class="section-container">
+    <div class="audience-box">
+      <div class="section-title" style="margin-bottom:0;">
+        <h3>Para Quem é o GN SLIDES PRO?</h3>
+        <p>Desenvolvido para atender desde profissionais exigentes até uso familiar</p>
+      </div>
+
+      <div class="audience-grid">
+        <div class="audience-item">
+          <i class="fa-solid fa-camera"></i>
+          <h5>Fotógrafos & Estúdios</h5>
+          <p>Entregue slideshows em 4K de casamentos, ensaios e formaturas como brinde ou produto adicional.</p>
+        </div>
+
+        <div class="audience-item">
+          <i class="fa-solid fa-church"></i>
+          <h5>Igrejas & Cultos</h5>
+          <p>Crie homenagens e retrospectivas com música de louvor para exibir nos cultos e eventos religiosos.</p>
+        </div>
+
+        <div class="audience-item">
+          <i class="fa-solid fa-cake-candles"></i>
+          <h5>Festas & Buffets</h5>
+          <p>Exiba a retrospectiva em vídeo do aniversariante no telão da festa durante o parabéns.</p>
+        </div>
+
+        <div class="audience-item">
+          <i class="fa-solid fa-building"></i>
+          <h5>Imobiliárias & Lojas</h5>
+          <p>Crie vídeos de anúncios de imóveis e produtos comerciais para divulgação no WhatsApp e redes sociais.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING SECTION -->
+  <section id="planos" class="section-container">
+    <div class="section-title">
+      <h3>Escolha o Plano Ideal para Você</h3>
+      <p>Ativação imediata no WhatsApp com garantia de suporte</p>
+    </div>
+
+    <div class="pricing-grid">
+      
+      <!-- PLAN 1: 24h -->
+      <div class="price-card">
+        <div class="price-header">
+          <h4>Evento Único</h4>
+          <span class="info-text">Licença 24 Horas</span>
+        </div>
+        <div class="price-amount">
+          <span class="currency">R$</span>
+          <span class="val">19</span>
+          <span class="currency">,90</span>
+          <span class="period">/ pagamento único</span>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i> Válido por 24 Horas</li>
+          <li><i class="fa-solid fa-check"></i> Sem Marca d'Água</li>
+          <li><i class="fa-solid fa-check"></i> Músicas Liberadas</li>
+          <li><i class="fa-solid fa-check"></i> Exportação em 4K MP4</li>
+          <li><i class="fa-solid fa-check"></i> Para 1 Aparelho</li>
+        </ul>
+        <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Quero%20comprar%20a%20Licença%20de%2024%20Horas%20(R$%2019,90)" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center;">
+          Comprar no WhatsApp
+        </a>
+      </div>
+
+      <!-- PLAN 2: MENSAL -->
+      <div class="price-card">
+        <div class="price-header">
+          <h4>Mensal PRO</h4>
+          <span class="info-text">Licença 30 Dias</span>
+        </div>
+        <div class="price-amount">
+          <span class="currency">R$</span>
+          <span class="val">39</span>
+          <span class="currency">,90</span>
+          <span class="period">/ mês</span>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i> Acesso por 30 Dias</li>
+          <li><i class="fa-solid fa-check"></i> Sem Marca d'Água</li>
+          <li><i class="fa-solid fa-check"></i> Fotos Ilimitadas</li>
+          <li><i class="fa-solid fa-check"></i> Músicas Liberadas</li>
+          <li><i class="fa-solid fa-check"></i> Suporte WhatsApp</li>
+        </ul>
+        <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Quero%20comprar%20a%20Licença%20Mensal%20(R$%2039,90)" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center;">
+          Comprar no WhatsApp
+        </a>
+      </div>
+
+      <!-- PLAN 3: ANUAL (DESTACADO) -->
+      <div class="price-card featured">
+        <div class="popular-tag">🔥 Mais Vendido</div>
+        <div class="price-header">
+          <h4>Anual PRO 👑</h4>
+          <span class="info-text">Licença 1 Ano (365 Dias)</span>
+        </div>
+        <div class="price-amount">
+          <span class="currency">R$</span>
+          <span class="val">197</span>
+          <span class="currency">,00</span>
+          <span class="period">/ ano (~R$ 16/mês)</span>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i> Acesso Total por 1 Ano</li>
+          <li><i class="fa-solid fa-check"></i> Sem Marca d'Água</li>
+          <li><i class="fa-solid fa-check"></i> Vídeos Ilimitados em 4K</li>
+          <li><i class="fa-solid fa-check"></i> Todas as Músicas & Efeitos</li>
+          <li><i class="fa-solid fa-check"></i> Suporte VIP Prioritário</li>
+        </ul>
+        <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Quero%20aproveitar%20a%20promoção%20da%20Licença%20Anual%20(R$%20197,00)" target="_blank" class="btn btn-orange" style="width:100%; justify-content:center;">
+          Garantir Oferta Anual
+        </a>
+      </div>
+
+      <!-- PLAN 4: VITALÍCIO -->
+      <div class="price-card">
+        <div class="price-header">
+          <h4>Vitalício VIP ♾️</h4>
+          <span class="info-text">Acesso Para Sempre</span>
+        </div>
+        <div class="price-amount">
+          <span class="currency">R$</span>
+          <span class="val">297</span>
+          <span class="currency">,00</span>
+          <span class="period">/ pagamento único</span>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i> Acesso Vitalício (Sem Expiração)</li>
+          <li><i class="fa-solid fa-check"></i> Sem Nenhuma Mensalidade</li>
+          <li><i class="fa-solid fa-check"></i> Atualizações Futuras Incluídas</li>
+          <li><i class="fa-solid fa-check"></i> Exportação em 4K Ilimitada</li>
+          <li><i class="fa-solid fa-check"></i> Suporte Direto do Dono</li>
+        </ul>
+        <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Quero%20comprar%20a%20Licença%20Vitalícia%20VIP%20(R$%20297,00)" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center;">
+          Comprar Vitalício
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section class="section-container">
+    <div class="section-title">
+      <h3>Perguntas Frequentes (FAQ)</h3>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Como recebo a minha licença após a compra?</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Após a confirmação do pagamento (Pix ou Cartão), enviamos a sua Chave de Licença diretamente no seu WhatsApp em menos de 2 minutos. Basta colar a chave no aplicativo para liberar todas as funções!
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Preciso instalar algum programa no meu computador?</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Não! O GN SLIDES PRO 4K funciona 100% online direto pelo seu navegador (Google Chrome, Safari, Edge) tanto no computador quanto no celular Android ou iPhone.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Posso usar a licença em mais de um aparelho?</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Por segurança comercial, cada licença é vinculada a um único aparelho por vez. Caso você troque de celular ou computador, basta nos avisar no WhatsApp para liberar o seu novo dispositivo!
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>Quais formatos de vídeo posso baixar?</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Você pode exportar seus vídeos no formato padrão universal MP4 em altíssima resolução 4K Ultra HD (3840x2160) ou Full HD (1920x1080).
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 GN SLIDES PRO 4K. Todos os direitos reservados.</p>
+    <p style="font-size:12px; margin-top:6px;">Dúvidas & Atendimento WhatsApp: (11) 98589-7774</p>
+  </footer>
+
+  <!-- STICKY WHATSAPP FLOATING BUTTON -->
+  <a href="https://api.whatsapp.com/send?phone=5511985897774&text=Olá!%20Tenho%20dúvidas%20sobre%20o%20GN%20SLIDES%20PRO%204K" target="_blank" class="float-wa" title="Falar no WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <!-- FAQ TOGGLE SCRIPT -->
+  <script>
+    document.querySelectorAll('.faq-question').forEach(q => {
+      q.addEventListener('click', () => {
+        const parent = q.parentElement;
+        parent.classList.toggle('active');
+      });
+    });
+  </script>
+
+</body>
+</html>

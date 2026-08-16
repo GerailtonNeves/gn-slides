@@ -1394,9 +1394,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // --- DEMO PROJECT & THEMED STOCK TEMPLATES LOAD ---
-  document.getElementById('btn-demo-project').addEventListener('click', () => {
-    loadDemoProject('church');
-  });
+  const btnDemoProject = document.getElementById('btn-demo-project');
+  if (btnDemoProject) {
+    btnDemoProject.addEventListener('click', () => {
+      loadDemoProject('church');
+    });
+  }
 
   function loadDemoProject(presetKey = 'church') {
     const preset = DemoAssets.templates[presetKey] || DemoAssets.templates.church;
