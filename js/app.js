@@ -1637,7 +1637,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateX(100%)';
-      setTimeout(() => toast.remove(), 300);
-    }, 3500);
+  // --- PWA SERVICE WORKER & APP INSTALL PROMPT HANDLER ---
+  let deferredPWAInstallPrompt = null;
+  const btnInstallPWA = document.getElementById('btn-install-pwa');
+  const modalInstallPWA = document.getElementById('modal-install-pwa');
+  const btnTriggerPWAInstall = document.getElementById('btn-trigger-pwa-install');
+  const pwaInstructionsText = document.getElementById('pwa-instructions-text');
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((reg) => {
+        console.log('PWA ServiceWorker registrado com sucesso:', reg.scope);
+      }).catch((err) => {
+        console.log('PWA ServiceWorker erro de registro:', err);
+      });
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPWAInstallPrompt = e;
+    if (btnInstallPWA) btnInstallPWA.classList.remove('hidden');
+    
+    // Auto show install prompt modal once for new visitors after 4 seconds
+    if (!sessionStorage.getItem('gn_slides_pwa_prompted')) {
+      sessionStorage.setItem('gn_slides_pwa_prompted', 'true');
+      setTimeout(() => {
+        openPWAInstallModal();
+      }, 4000);
+    }
+  });
+
+  if (btnInstallPWA) {
+    btnInstallPWA.addEventListener('click', () => {
+      openPWAInstallModal();
+    });
+  }
+
+  function openPWAInstallModal() {
+    const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isiOS && pwaInstructionsText) {
+      pwaInstructionsText.innerHTML = 'No iPhone (Safari): toque no botão <strong>Compartilhar <i class="fa-solid fa-share-from-square"></i></strong> no rodapé do Safari e selecione <strong>"Adicionar à Tela de Início"</strong>.';
+    } else if (pwaInstructionsText) {
+      pwaInstructionsText.innerHTML = 'Clique no botão <strong>"Instalar Aplicativo Agora"</strong> abaixo ou toque nos 3 pontos do Chrome e selecione <strong>"Instalar aplicativo / Adicionar à Tela Inicial"</strong>.';
+    }
+    if (modalInstallPWA) modalInstallPWA.classList.remove('hidden');
+  }
+
+  if (btnTriggerPWAInstall) {
+    btnTriggerPWAInstall.addEventListener('click', async () => {
+      if (deferredPWAInstallPrompt) {
+        deferredPWAInstallPrompt.prompt();
+        const choice = await deferredPWAInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          showToast('Aplicativo instalado com sucesso!', 'success');
+        }
+        deferredPWAInstallPrompt = null;
+        if (modalInstallPWA) modalInstallPWA.classList.add('hidden');
+      } else {
+        openPWAInstallModal();
+      }
+    });
   }
 });

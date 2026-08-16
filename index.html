@@ -7,6 +7,15 @@
   <!-- SEO & Social Meta Tags -->
   <meta name="description" content="GN SLIDES PRO - Crie slideshows em 4K Ultra HD com abertura, encerramento, fotos inteiras, transições variadas e música de alta qualidade para exportar em MP4.">
   
+  <!-- PWA Manifest & App Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-512.png">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GN SLIDES">
+  
   <!-- Google Fonts: Outfit & Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +54,10 @@
         <!-- Secret Admin CRM Button (Only unlocked with Owner Password 11985897774) -->
         <button id="btn-open-clients-crm" class="btn btn-secondary hidden" title="Painel - Gestão de Licenças">
           <i class="fa-solid fa-user-shield text-orange"></i> Painel
+        </button>
+
+        <button id="btn-install-pwa" class="btn btn-secondary" title="Instalar Aplicativo no Celular/PC">
+          <i class="fa-solid fa-mobile-screen-button text-cyan"></i> Instalar App
         </button>
 
         <button id="btn-activate-license" class="btn btn-secondary" title="Ativar Licença PRO">
@@ -1012,6 +1025,46 @@
         <div class="modal-footer" style="justify-content: space-between;">
           <button id="btn-guest-bypass" class="btn btn-secondary btn-xs">
             <i class="fa-solid fa-user-clock"></i> Continuar como Convidado
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: INSTALAR APLICATIVO PWA NO CELULAR / PC -->
+    <div id="modal-install-pwa" class="modal-overlay hidden" style="z-index: 6000;">
+      <div class="modal-card glass-modal modal-md" style="border: 2px solid var(--blue-light);">
+        <div class="modal-header" style="background: rgba(2, 132, 199, 0.12);">
+          <div class="modal-title">
+            <i class="fa-solid fa-mobile-screen-button text-cyan" style="font-size:24px;"></i>
+            <h3>Instalar o App GN SLIDES PRO 4K</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-install-pwa"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body text-center" style="text-align:center;">
+          <div style="margin: 0 auto 16px auto; width:100px; height:100px; border-radius:24px; overflow:hidden; box-shadow:0 10px 30px rgba(2, 132, 199, 0.4); border:2px solid var(--blue-light);">
+            <img src="assets/icons/icon-512.png" alt="GN SLIDES PRO Icon" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+
+          <h4 style="font-size:20px; font-weight:800; color:var(--text-main);">Instale o Aplicativo no seu Aparelho!</h4>
+          <p class="info-text margin-top-xs" style="font-size:14px; color:#cbd5e1; line-height:1.5;">
+            Tenha o <strong>GN SLIDES PRO 4K</strong> direto na tela inicial do seu celular (Android/iPhone) ou computador para usar a qualquer momento!
+          </p>
+
+          <div id="pwa-install-instructions" class="info-card-blue margin-top-sm" style="text-align:left; background:rgba(2, 132, 199, 0.08);">
+            <i class="fa-solid fa-circle-info text-cyan" style="font-size:20px;"></i>
+            <div>
+              <strong>Como Instalar:</strong>
+              <p style="font-size:12px; margin-top:2px;" id="pwa-instructions-text">
+                Clique no botão <strong>"Instalar Aplicativo Agora"</strong> abaixo ou toque nos 3 pontos do navegador e selecione <strong>"Adicionar à Tela Inicial"</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="justify-content:center;">
+          <button id="btn-trigger-pwa-install" class="btn btn-orange-gradient btn-glow" style="width:100%; padding:14px;">
+            <i class="fa-solid fa-download"></i> Instalar Aplicativo Agora
           </button>
         </div>
       </div>
