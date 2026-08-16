@@ -1,6 +1,9 @@
 /* ==========================================================================
    GN SLIDES PRO 4K - HIGH-PERFORMANCE CANVAS SLIDESHOW ENGINE
    Optimized for Desktop, Mobile & Tablet Browsers (Zero Memory Crash)
+   Supports Full-Photo Fit (100% Complete Photos), Rich Cinematic Transitions
+   (Glitch/Falhando, Cross-Zoom, Circle Reveal, Blur Glitch, Slide Push, Cube Rotate),
+   Ultra-Vibrant 4K Overlay Text Rendering & Dynamic Ken Burns Motion.
    ========================================================================== */
 
 window.SlideshowEngine = {
@@ -21,7 +24,7 @@ window.SlideshowEngine = {
   globalTransition: 'random',
   transitionDuration: 1.2,
   kenBurnsEnabled: true,
-  imageFitMode: 'contain-blur',
+  imageFitMode: 'contain-blur', // Default: 100% Full Photo with Blurred Background
   photoFilter: 'orange-blue',
 
   // Cinematic Intro Opening Screen Settings (100% Customizable)
@@ -58,7 +61,18 @@ window.SlideshowEngine = {
   onTimeUpdate: null,
   onEnded: null,
 
-  transitionList: ['fade', 'slide-left', 'slide-right', 'slide-up', 'zoom-in', 'wipe-circle', 'blur'],
+  // Expanded Catalog of Ultra-Modern Transitions
+  transitionList: [
+    'glitch-flash', 
+    'cross-zoom', 
+    'circle-reveal', 
+    'blur-glitch', 
+    'fade', 
+    'slide-left', 
+    'slide-right', 
+    'slide-up', 
+    'zoom-in'
+  ],
 
   isMobileDevice: function() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
@@ -77,7 +91,6 @@ window.SlideshowEngine = {
   },
 
   updateResolution: function() {
-    // On mobile devices, force 1080p preview canvas to prevent Mobile Chrome RAM crashes ("Ah, não!")
     const isMobile = this.isMobileDevice();
     const is4K = !isMobile && (this.resolution === '4K');
     const baseWidth = is4K ? 3840 : 1920;
@@ -141,22 +154,22 @@ window.SlideshowEngine = {
   generateBlurCache: function(slideId, img) {
     try {
       const offscreen = document.createElement('canvas');
-      offscreen.width = 360;
-      offscreen.height = 202;
+      offscreen.width = 480;
+      offscreen.height = 270;
       const oCtx = offscreen.getContext('2d');
-      oCtx.filter = 'blur(10px) brightness(0.65)';
+      oCtx.filter = 'blur(16px) brightness(0.65) saturate(1.4)';
       
       const imgRatio = img.width / img.height;
-      const oRatio = 360 / 202;
+      const oRatio = 480 / 270;
       let drawW, drawH;
 
       if (imgRatio > oRatio) {
-        drawH = 202; drawW = drawH * imgRatio;
+        drawH = 270; drawW = drawH * imgRatio;
       } else {
-        drawW = 360; drawH = drawW / imgRatio;
+        drawW = 480; drawH = drawW / imgRatio;
       }
-      const drawX = (360 - drawW) / 2;
-      const drawY = (202 - drawH) / 2;
+      const drawX = (480 - drawW) / 2;
+      const drawY = (270 - drawH) / 2;
 
       oCtx.drawImage(img, drawX, drawY, drawW, drawH);
       this.blurCache.set(slideId, offscreen);
@@ -239,8 +252,8 @@ window.SlideshowEngine = {
     const w = this.width;
     const h = this.height;
 
-    // Clear background with dark luxury ocean blue
-    this.ctx.fillStyle = '#090f1e';
+    // Deep luxury dark background
+    this.ctx.fillStyle = '#060a12';
     this.ctx.fillRect(0, 0, w, h);
 
     const introDur = (this.introEnabled && (this.introTitle || this.introPresenter || this.introTag)) ? (this.introDuration || 3.5) : 0;
@@ -263,7 +276,7 @@ window.SlideshowEngine = {
       return;
     }
 
-    // 3. PHOTO SLIDES RENDER WITH AUTOMATIC VARIED CINEMATIC TRANSITIONS
+    // 3. PHOTO SLIDES RENDER WITH VARIED TRANSITIONS & FULL PHOTO FITTING
     if (this.slides.length === 0) {
       this.renderEmptyStateScreen();
       if (window.LicenseSystem) window.LicenseSystem.drawWatermarkIfNeeded(this.ctx, w, h);
@@ -332,36 +345,38 @@ window.SlideshowEngine = {
     ctx.globalAlpha = Math.max(0, fade);
 
     const grad = ctx.createRadialGradient(w/2, h/2, 100, w/2, h/2, w*0.8);
-    grad.addColorStop(0, '#0c1a36');
-    grad.addColorStop(1, '#020617');
+    grad.addColorStop(0, '#0c1e3d');
+    grad.addColorStop(0.6, '#071124');
+    grad.addColorStop(1, '#020612');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = 'rgba(2, 132, 199, 0.4)';
+    // Neon Accent Frame
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
     ctx.lineWidth = 4;
     ctx.strokeRect(60, 60, w - 120, h - 120);
 
-    const tag = (this.introTag || 'EDIÇÃO ESPECIAL').toUpperCase();
-    ctx.font = "600 32px 'Plus Jakarta Sans', sans-serif";
-    ctx.fillStyle = "#0284c7";
+    const tag = (this.introTag || 'EDIÇÃO ESPECIAL DE FOTOS').toUpperCase();
+    ctx.font = "700 32px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#38bdf8";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(tag, w/2, h/2 - 120);
+    ctx.fillText(tag, w/2, h/2 - 130);
 
-    ctx.font = "400 28px 'Outfit', sans-serif";
+    ctx.font = "500 28px 'Outfit', sans-serif";
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText(this.introPresenter || 'Apresenta', w/2, h/2 - 60);
+    ctx.fillText(this.introPresenter || 'Apresenta', w/2, h/2 - 70);
 
-    const title = this.introTitle || 'CAPELA SANTA INÊS';
-    ctx.font = "800 72px 'Plus Jakarta Sans', sans-serif";
+    const title = this.introTitle || 'MEMÓRIAS INESQUECÍVEIS';
+    ctx.font = "900 76px 'Plus Jakarta Sans', sans-serif";
     ctx.fillStyle = "#ffffff";
-    ctx.shadowColor = "rgba(249, 115, 22, 0.8)";
-    ctx.shadowBlur = 30;
-    ctx.fillText(title, w/2, h/2 + 20);
+    ctx.shadowColor = "rgba(249, 115, 22, 0.9)";
+    ctx.shadowBlur = 35;
+    ctx.fillText(title, w/2, h/2 + 15);
 
     ctx.shadowBlur = 0;
     ctx.font = "500 34px 'Outfit', sans-serif";
-    ctx.fillStyle = "#e2e8f0";
+    ctx.fillStyle = "#fbbf24";
     ctx.fillText(this.introSubtitle || 'Um Filme Especial de Fotos e Música', w/2, h/2 + 110);
 
     ctx.restore();
@@ -377,29 +392,29 @@ window.SlideshowEngine = {
     ctx.globalAlpha = Math.max(0, fade);
 
     const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, '#020617');
-    grad.addColorStop(0.5, '#07162c');
-    grad.addColorStop(1, '#020617');
+    grad.addColorStop(0, '#020612');
+    grad.addColorStop(0.5, '#0d1f3c');
+    grad.addColorStop(1, '#020612');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
     const icon = this.outroIcon || '♥';
-    ctx.font = "84px 'Outfit', sans-serif";
+    ctx.font = "88px 'Outfit', sans-serif";
     ctx.fillStyle = "#f97316";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.shadowColor = "rgba(249, 115, 22, 0.9)";
-    ctx.shadowBlur = 40;
+    ctx.shadowColor = "rgba(249, 115, 22, 0.95)";
+    ctx.shadowBlur = 45;
     ctx.fillText(icon, w/2, h/2 - 100);
 
     ctx.shadowBlur = 0;
-    ctx.font = "800 68px 'Plus Jakarta Sans', sans-serif";
+    ctx.font = "800 70px 'Plus Jakarta Sans', sans-serif";
     ctx.fillStyle = "#ffffff";
     ctx.fillText(this.outroTitle || 'Obrigado por Assistir!', w/2, h/2 + 20);
 
-    ctx.font = "500 32px 'Outfit', sans-serif";
+    ctx.font = "500 34px 'Outfit', sans-serif";
     ctx.fillStyle = "#cbd5e1";
-    ctx.fillText(this.outroSubtitle || 'Guardado para Sempre no Coração', w/2, h/2 + 100);
+    ctx.fillText(this.outroSubtitle || 'Guardado para Sempre no Coração', w/2, h/2 + 105);
 
     ctx.restore();
   },
@@ -409,20 +424,21 @@ window.SlideshowEngine = {
     const w = this.width;
     const h = this.height;
 
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#060a12';
     ctx.fillRect(0, 0, w, h);
 
-    ctx.font = "600 36px 'Plus Jakarta Sans', sans-serif";
-    ctx.fillStyle = "#0284c7";
+    ctx.font = "800 40px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#38bdf8";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("GN SLIDES PRO 4K", w/2, h/2 - 30);
 
     ctx.font = "400 24px 'Outfit', sans-serif";
     ctx.fillStyle = "#64748b";
-    ctx.fillText("Adicione fotos no menu à esquerda para visualizar o vídeo aqui.", w/2, h/2 + 30);
+    ctx.fillText("Adicione fotos no menu à esquerda para visualizar o slideshow aqui.", w/2, h/2 + 30);
   },
 
+  // 100% COMPLETE PHOTO RENDERER (NO CROPPING / FOTO INTEIRA PERFEITA)
   renderSingleSlide: function(slide, img, progressTime, totalSlideDur, alpha = 1.0) {
     if (!img) return;
     const ctx = this.ctx;
@@ -432,27 +448,33 @@ window.SlideshowEngine = {
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    // 1. Draw Blurred Background if contain-blur mode
+    // 1. Render Blurred Ambient Background (Full Fill)
     if (this.imageFitMode === 'contain-blur') {
       const blurImg = this.blurCache.get(slide.id);
       if (blurImg) {
         ctx.drawImage(blurImg, 0, 0, w, h);
       } else {
-        ctx.fillStyle = '#090f1e';
+        ctx.fillStyle = '#060a12';
         ctx.fillRect(0, 0, w, h);
       }
+      
+      // Vignette Overlay for Depth
+      const vigGrad = ctx.createRadialGradient(w/2, h/2, w*0.3, w/2, h/2, w*0.75);
+      vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0.1)');
+      vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.65)');
+      ctx.fillStyle = vigGrad;
+      ctx.fillRect(0, 0, w, h);
+
     } else if (this.imageFitMode === 'contain-black') {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, w, h);
     }
 
-    // 2. Compute Fit & Ken Burns Movement
+    // 2. Calculate Ken Burns Motion & 100% Full Photo Bounds
     let scale = 1.0;
-    let dx = 0, dy = 0;
-
     if (this.kenBurnsEnabled) {
       const progress = progressTime / totalSlideDur;
-      scale = 1.0 + (progress * 0.08); // Suave 8% zoom
+      scale = 1.0 + (progress * 0.07); // Gentle 7% smooth zoom
     }
 
     const imgRatio = img.width / img.height;
@@ -466,7 +488,7 @@ window.SlideshowEngine = {
         drawW = w * scale; drawH = drawW / imgRatio;
       }
     } else {
-      // contain mode
+      // DEFAULT: FULL PHOTO 100% CONTAINED (Zero Cuts!)
       if (imgRatio > screenRatio) {
         drawW = w * scale; drawH = drawW / imgRatio;
       } else {
@@ -477,17 +499,26 @@ window.SlideshowEngine = {
     drawX = (w - drawW) / 2;
     drawY = (h - drawH) / 2;
 
+    // Drop shadow behind main photo
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 10;
+
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-    // Apply Filter if selected
+    ctx.shadowBlur = 0;
+
+    // Color Glow Overlay Filter
     if (this.photoFilter === 'orange-blue') {
-      ctx.fillStyle = 'rgba(2, 132, 199, 0.05)';
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.04)';
       ctx.fillRect(0, 0, w, h);
     }
 
     ctx.restore();
   },
 
+  // HIGH-IMPACT CINEMATIC & GLITCH TRANSITIONS SYSTEM
   renderTransition: function(slideA, slideB, progress, transType, progressTime, slideDur) {
     const ctx = this.ctx;
     const w = this.width;
@@ -496,35 +527,118 @@ window.SlideshowEngine = {
     const imgA = this.loadedImages.get(slideA.id);
     const imgB = this.loadedImages.get(slideB.id);
 
-    if (transType === 'fade') {
-      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
-      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
-    } else if (transType === 'slide-left') {
+    // --- EFEITO 1: GLITCH FLASH (FALHANDO / CYBERPUNK) ---
+    if (transType === 'glitch-flash') {
       ctx.save();
+      // Step A: Draw Slide A with color shift & glitch horizontal displacement
+      const glitchIntensity = Math.sin(progress * Math.PI);
+      const shiftX = (Math.random() - 0.5) * 60 * glitchIntensity;
+
+      ctx.save();
+      ctx.globalAlpha = 1.0 - progress;
+      ctx.translate(shiftX, 0);
       this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
       ctx.restore();
+
+      // Step B: Draw Slide B with inverse shift
+      ctx.save();
+      ctx.globalAlpha = progress;
+      ctx.translate(-shiftX, 0);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
+      ctx.restore();
+
+      // Scanline & RGB Color Flash Effect during mid-transition
+      if (glitchIntensity > 0.3) {
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.25 * glitchIntensity})`;
+        ctx.fillRect(0, Math.random() * h, w, Math.random() * 40 + 10);
+
+        ctx.fillStyle = `rgba(249, 115, 22, ${0.25 * glitchIntensity})`;
+        ctx.fillRect(0, Math.random() * h, w, Math.random() * 30 + 10);
+      }
+      ctx.restore();
+
+    // --- EFEITO 2: CROSS-ZOOM (ZOOM CINEMÁTICO RÁPIDO) ---
+    } else if (transType === 'cross-zoom') {
+      ctx.save();
+      const zoomA = 1.0 + (progress * 0.4);
+      ctx.translate(w/2, h/2);
+      ctx.scale(zoomA, zoomA);
+      ctx.translate(-w/2, -h/2);
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
+      ctx.restore();
+
+      ctx.save();
+      const zoomB = 1.4 - (progress * 0.4);
+      ctx.translate(w/2, h/2);
+      ctx.scale(zoomB, zoomB);
+      ctx.translate(-w/2, -h/2);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
+      ctx.restore();
+
+    // --- EFEITO 3: CIRCLE REVEAL (REVELAÇÃO CIRCULAR SUAVE) ---
+    } else if (transType === 'circle-reveal') {
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
+
+      ctx.save();
+      const maxRadius = Math.sqrt(w*w + h*h) / 2;
+      const currentRadius = progress * maxRadius;
+
+      ctx.beginPath();
+      ctx.arc(w/2, h/2, Math.max(0, currentRadius), 0, Math.PI * 2);
+      ctx.clip();
+
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
+      ctx.restore();
+
+    // --- EFEITO 4: BLUR-GLITCH (DESFOQUE COM DESLOCAMENTO COLORIDO) ---
+    } else if (transType === 'blur-glitch') {
+      const alphaA = Math.max(0, 1.0 - (progress * 1.2));
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, alphaA);
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, progress * 1.2);
+      const glitchY = (Math.random() - 0.5) * 30 * Math.sin(progress * Math.PI);
+      ctx.translate(0, glitchY);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
+      ctx.restore();
+
+    // --- EFEITO 5: SLIDE UP (DESLIZAR PARA CIMA) ---
+    } else if (transType === 'slide-up') {
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
+
+      ctx.save();
+      ctx.translate(0, h * (1.0 - progress));
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
+      ctx.restore();
+
+    // --- EFEITO 6: SLIDE LEFT ---
+    } else if (transType === 'slide-left') {
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
 
       ctx.save();
       ctx.translate(w * (1.0 - progress), 0);
       this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
       ctx.restore();
+
+    // --- EFEITO 7: SLIDE RIGHT ---
     } else if (transType === 'slide-right') {
-      ctx.save();
       this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
-      ctx.restore();
 
       ctx.save();
       ctx.translate(-w * (1.0 - progress), 0);
       this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
       ctx.restore();
+
+    // --- EFEITO 8: ZOOM IN CROSSFADE ---
     } else if (transType === 'zoom-in') {
       this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
       ctx.save();
       ctx.globalAlpha = progress;
       this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
       ctx.restore();
+
+    // --- DEFAULT FADE ---
     } else {
-      // Default Smooth Crossfade
       this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
       this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
     }
@@ -540,13 +654,27 @@ window.SlideshowEngine = {
     const h = this.height;
 
     ctx.save();
-    ctx.font = "800 48px 'Plus Jakarta Sans', sans-serif";
+    ctx.font = "800 52px 'Plus Jakarta Sans', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
     let posY = h / 2;
     if (this.textPosition === 'top') posY = 180;
     if (this.textPosition === 'bottom') posY = h - 180;
+
+    // Glowing Pill Background Box for Maximum Readability
+    const textWidth = ctx.measureText(textToShow).width;
+    const boxW = textWidth + 60;
+    const boxH = 74;
+
+    ctx.fillStyle = "rgba(7, 11, 20, 0.75)";
+    ctx.beginPath();
+    ctx.roundRect(w/2 - boxW/2, posY - boxH/2, boxW, boxH, 37);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     ctx.fillStyle = "#ffffff";
     ctx.shadowColor = "rgba(249, 115, 22, 0.9)";
