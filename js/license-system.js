@@ -1,9 +1,9 @@
 /* ==========================================================================
    GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
-   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Robust WhatsApp Copy
-   String Sanitization (Removes backticks, quotes, spaces & labels), 100% Symmetric
-   Bitwise Checksum Validation, Instant Remote License Revocation & 1-Click Unlocking.
+   (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Persistent CRM Storage,
+   Instant Remote License Revocation, 1-Click Unlocking, and Full Client CRM
+   Management (Renew, Reset Device Lock, Revoke/Unrevoke, WhatsApp Direct).
    ========================================================================== */
 
 const LicenseSystem = {
@@ -82,12 +82,16 @@ const LicenseSystem = {
   },
 
   saveClients: function(clients) {
-    localStorage.setItem(this.CLIENTS_DB_KEY, JSON.stringify(clients));
+    try {
+      localStorage.setItem(this.CLIENTS_DB_KEY, JSON.stringify(clients));
+    } catch (e) {
+      console.error('Erro ao salvar banco de clientes CRM:', e);
+    }
   },
 
-  registerClientRecord: function(name, email, planCode, key) {
+  registerClientRecord: function(name, email, planCode, key, deviceId = null) {
     const clients = this.getAllClients();
-    const cleanName = name.trim();
+    const cleanName = (name || 'CLIENTE').trim();
     const cleanEmail = (email || '').trim().toLowerCase();
     const planInfo = this.PLANS[planCode] || this.PLANS['VITALICIO'];
 
@@ -101,7 +105,7 @@ const LicenseSystem = {
       planCode: planCode,
       planName: planInfo.name,
       key: key,
-      deviceId: null, // Single Device binding on first activation
+      deviceId: deviceId, // Single Device binding
       activatedAt: activatedAt,
       expiresAt: expiresAt,
       status: 'active' // 'active', 'expired', 'revoked'
@@ -436,16 +440,15 @@ const LicenseSystem = {
     this.isLicensed = true;
     this.licenseData = data;
 
-    // Register or update client in CRM DB and lock to current device
-    const existingIdx = clients.findIndex(c => c.key === data.key);
+    // Register or update client in CRM DB cleanly without overwriting
+    const currentClients = this.getAllClients();
+    const existingIdx = currentClients.findIndex(c => c.key === data.key);
     if (existingIdx !== -1) {
-      clients[existingIdx].deviceId = currentDevice;
-      clients[existingIdx].status = 'active';
-      this.saveClients(clients);
+      currentClients[existingIdx].deviceId = currentDevice;
+      currentClients[existingIdx].status = 'active';
+      this.saveClients(currentClients);
     } else {
-      const rec = this.registerClientRecord(check.clientName, userEmail, check.planCode, data.key);
-      rec.deviceId = currentDevice;
-      this.saveClients(clients);
+      this.registerClientRecord(check.clientName, userEmail, check.planCode, data.key, currentDevice);
     }
 
     this.startExpirationMonitor();
