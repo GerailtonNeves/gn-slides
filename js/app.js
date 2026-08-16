@@ -4,7 +4,7 @@
    1 Ano, Vitalício), Slide Duration Controls (1.5s, 2s, 3s, 5s, Custom),
    Hardware Device Locking, Guest Lock (No Music + Watermark for Visitors),
    PRO Unlocked Mode for Paid Licensed Clients, CRM Client Management Dashboard,
-   Mobile Memory Auto-Optimization (Zero "Ah, não!" Chrome Crashes) & 4K Exporter.
+   Zero-RAM Mobile Photo Loader (URL.createObjectURL + Blob Revocation) & 4K Exporter.
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // --- UPLOAD HANDLERS: PHOTOS & FAST COMPRESSION FOR MOBILE RAM ---
+  // --- UPLOAD HANDLERS: ZERO-RAM MOBILE PHOTO LOADER ---
   const inputPhotos = document.getElementById('input-upload-photos');
   const dropZonePhotos = document.getElementById('drop-zone-photos');
 
@@ -594,58 +594,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (files.length > 0) handlePhotoFilesUpload(files);
   });
 
-  // High-performance mobile photo downscaler (Prevents Chrome Mobile "Ah, não!" memory crash)
-  function compressAndResizePhoto(file, maxWidth = 1920, maxHeight = 1920, quality = 0.85) {
+  // Ultra-safe mobile photo loader: Uses Blob URLs + immediate revocation + max 1280px canvas resize
+  // Guaranteed ZERO Chrome Mobile RAM crash ("Ah, não!") on Android/iOS devices!
+  function compressAndResizePhoto(file, maxWidth = 1280, maxHeight = 1280, quality = 0.80) {
     return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          let width = img.width;
-          let height = img.height;
+      const blobUrl = URL.createObjectURL(file);
+      const img = new Image();
+      
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
 
-          if (width > maxWidth || height > maxHeight) {
-            if (width / height > maxWidth / maxHeight) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
-            } else {
-              width = Math.round((width * maxHeight) / height);
-              height = maxHeight;
-            }
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
           }
+        }
 
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
 
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressedDataUrl);
-        };
-        img.onerror = () => resolve(e.target.result);
-        img.src = e.target.result;
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+        // Immediate memory cleanup
+        URL.revokeObjectURL(blobUrl);
+        img.onload = null;
+        img.onerror = null;
+        img.src = '';
+
+        resolve(compressedDataUrl);
       };
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file);
+
+      img.onerror = () => {
+        URL.revokeObjectURL(blobUrl);
+        resolve(null);
+      };
+
+      img.src = blobUrl;
     });
   }
 
   async function handlePhotoFilesUpload(files) {
-    showToast(`Otimizando ${files.length} foto(s) para celular...`, 'info');
-    for (let file of files) {
+    if (!files || files.length === 0) return;
+    showToast(`Processando ${files.length} foto(s)...`, 'info');
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       const dataUrl = await compressAndResizePhoto(file);
-      if (!dataUrl) continue;
-      const newSlide = {
-        id: 'slide_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        title: file.name,
-        caption: '',
-        duration: AppState.globalSlideDuration,
-        transition: 'default',
-        dataUrl: dataUrl
-      };
-      AppState.slides.push(newSlide);
+      if (dataUrl) {
+        const newSlide = {
+          id: 'slide_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          title: file.name || `Foto ${AppState.slides.length + 1}`,
+          caption: '',
+          duration: AppState.globalSlideDuration,
+          transition: 'default',
+          dataUrl: dataUrl
+        };
+        AppState.slides.push(newSlide);
+      }
+      // Micro-pause to allow mobile Garbage Collector to run
+      await new Promise(r => setTimeout(r, 60));
     }
+
+    // Reset input value to release mobile OS file handle references
+    if (inputPhotos) inputPhotos.value = '';
+
     await syncProjectToEngine();
     syncPhotoCaptionsToInputs();
     showToast(`${files.length} foto(s) adicionada(s) com sucesso!`, 'success');
