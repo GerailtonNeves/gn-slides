@@ -2,13 +2,14 @@
    GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
    (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Strict Cryptographic
-   Checksum Verification, Auto-Blocking Expiration, and Full Client CRM Management
-   (Renew, Reset Device Lock, Revoke License, Send WhatsApp Key).
+   Checksum Verification, Instant Remote License Revocation & Auto-Blocking,
+   and Full Client CRM Management (Renew, Reset Device Lock, Revoke, WhatsApp Direct).
    ========================================================================== */
 
 const LicenseSystem = {
   STORAGE_KEY: 'gn_slides_pro_license_data',
   CLIENTS_DB_KEY: 'gn_slides_pro_clients_database',
+  REVOKED_KEYS_KEY: 'gn_slides_pro_revoked_keys',
   SECRET_SALT: 'GNSLIDES_PRO_COMMERCIAL_SALT_2026_V2',
 
   isLicensed: false,
@@ -30,6 +31,26 @@ const LicenseSystem = {
     this.onExpiredCallback = onExpiredCb;
     this.loadLicenseState();
     this.startExpirationMonitor();
+  },
+
+  // --- REVOCATION CHECKER ---
+  isKeyRevoked: function(key) {
+    if (!key || typeof key !== 'string') return false;
+    const cleanKey = key.trim().toUpperCase();
+
+    // 1. Check global revoked list
+    try {
+      const rawRevoked = localStorage.getItem(this.REVOKED_KEYS_KEY);
+      const revokedList = rawRevoked ? JSON.parse(rawRevoked) : [];
+      if (revokedList.includes(cleanKey)) return true;
+    } catch (e) {}
+
+    // 2. Check CRM database
+    const clients = this.getAllClients();
+    const cli = clients.find(c => c.key === cleanKey);
+    if (cli && (cli.status === 'revoked' || (cli.expiresAt && Date.now() > cli.expiresAt))) return true;
+
+    return false;
   },
 
   // --- CLIENT DATABASE MANAGEMENT (CRM) ---
@@ -87,6 +108,14 @@ const LicenseSystem = {
       clients[idx].expiresAt = expiresAt;
       clients[idx].status = 'active';
 
+      // Remove from revoked keys list if renewed
+      try {
+        const rawRevoked = localStorage.getItem(this.REVOKED_KEYS_KEY);
+        let revokedList = rawRevoked ? JSON.parse(rawRevoked) : [];
+        revokedList = revokedList.filter(k => k !== clients[idx].key);
+        localStorage.setItem(this.REVOKED_KEYS_KEY, JSON.stringify(revokedList));
+      } catch (e) {}
+
       // Update current active license if renewed current machine
       if (this.licenseData && this.licenseData.key === clients[idx].key) {
         this.licenseData.expiresAt = expiresAt;
@@ -116,23 +145,42 @@ const LicenseSystem = {
     const clients = this.getAllClients();
     const idx = clients.findIndex(c => c.id === clientId);
     if (idx !== -1) {
+      const revokedKey = clients[idx].key;
       clients[idx].status = 'revoked';
       clients[idx].expiresAt = Date.now() - 1000;
 
-      if (this.licenseData && this.licenseData.key === clients[idx].key) {
+      // Add to global revoked list
+      try {
+        const rawRevoked = localStorage.getItem(this.REVOKED_KEYS_KEY);
+        const revokedList = rawRevoked ? JSON.parse(rawRevoked) : [];
+        if (!revokedList.includes(revokedKey)) {
+          revokedList.push(revokedKey);
+          localStorage.setItem(this.REVOKED_KEYS_KEY, JSON.stringify(revokedList));
+        }
+      } catch (e) {}
+
+      // Immediately cancel active license on this machine if matching
+      if (this.licenseData && this.licenseData.key === revokedKey) {
         this.isLicensed = false;
         this.licenseData = null;
         localStorage.removeItem(this.STORAGE_KEY);
+        if (typeof this.onExpiredCallback === 'function') {
+          this.onExpiredCallback();
+        }
       }
 
       this.saveClients(clients);
-      return { success: true, message: `Licença do cliente ${clients[idx].name} foi revogada/bloqueada.` };
+      return { success: true, message: `Licença do cliente ${clients[idx].name} foi REVOGADA e BLOQUEADA!` };
     }
     return { success: false, message: 'Cliente não encontrado.' };
   },
 
   deleteClientRecord: function(clientId) {
     let clients = this.getAllClients();
+    const cli = clients.find(c => c.id === clientId);
+    if (cli) {
+      this.revokeClientLicense(clientId);
+    }
     clients = clients.filter(c => c.id !== clientId);
     this.saveClients(clients);
     return { success: true, message: 'Registro do cliente removido.' };
@@ -169,6 +217,14 @@ const LicenseSystem = {
       if (raw) {
         const data = JSON.parse(raw);
         if (data && data.key) {
+          // Instant Check: Is key revoked or expired in DB?
+          if (this.isKeyRevoked(data.key)) {
+            this.isLicensed = false;
+            this.licenseData = null;
+            localStorage.removeItem(this.STORAGE_KEY);
+            return;
+          }
+
           const validRes = this.validateKeyDetailed(data.key);
           if (validRes.valid) {
             // Check single device lock
@@ -226,6 +282,11 @@ const LicenseSystem = {
 
     const key = keyStr.trim().toUpperCase();
 
+    // Check if key has been revoked
+    if (this.isKeyRevoked(key)) {
+      return { valid: false, message: 'Esta chave de licença foi BLOQUEADA pelo administrador.' };
+    }
+
     // Master Keys for instant admin testing
     if (key === 'GNSLIDES-PRO-ADMIN-MASTER-2026' || key === 'GNSLIDES-PRO-VIP-2026') {
       return { valid: true, planCode: 'VITALICIO', clientName: 'VIP' };
@@ -252,7 +313,12 @@ const LicenseSystem = {
   },
 
   activateLicense: function(keyStr, userEmail = '') {
-    const check = this.validateKeyDetailed(keyStr);
+    const cleanKey = (keyStr || '').trim().toUpperCase();
+    if (this.isKeyRevoked(cleanKey)) {
+      return { success: false, message: 'Esta chave de licença foi BLOQUEADA. Entre em contato pelo telefone (11) 98589-7774.' };
+    }
+
+    const check = this.validateKeyDetailed(cleanKey);
     if (!check.valid) {
       return { success: false, message: check.message || 'Chave incorreta. Digite exatamente os caracteres da licença.' };
     }
@@ -264,7 +330,7 @@ const LicenseSystem = {
     const expiresAt = planInfo.ms ? (activatedAt + planInfo.ms) : null;
 
     const data = {
-      key: keyStr.trim().toUpperCase(),
+      key: cleanKey,
       planCode: check.planCode,
       planName: planInfo.name,
       clientName: check.clientName,
@@ -302,14 +368,28 @@ const LicenseSystem = {
     if (this.expirationTimer) clearInterval(this.expirationTimer);
 
     this.expirationTimer = setInterval(() => {
-      if (this.isLicensed && this.licenseData && this.licenseData.expiresAt) {
-        const remainingMs = this.licenseData.expiresAt - Date.now();
-        if (remainingMs <= 0) {
+      if (this.isLicensed && this.licenseData) {
+        // 1. Instant check: Was active key revoked by owner?
+        if (this.isKeyRevoked(this.licenseData.key)) {
           this.isLicensed = false;
           this.licenseData = null;
           localStorage.removeItem(this.STORAGE_KEY);
           if (typeof this.onExpiredCallback === 'function') {
             this.onExpiredCallback();
+          }
+          return;
+        }
+
+        // 2. Check time remaining
+        if (this.licenseData.expiresAt) {
+          const remainingMs = this.licenseData.expiresAt - Date.now();
+          if (remainingMs <= 0) {
+            this.isLicensed = false;
+            this.licenseData = null;
+            localStorage.removeItem(this.STORAGE_KEY);
+            if (typeof this.onExpiredCallback === 'function') {
+              this.onExpiredCallback();
+            }
           }
         }
       }
