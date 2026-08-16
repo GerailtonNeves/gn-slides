@@ -3,7 +3,8 @@
    Binds AuthSystem, Time-based License System (5 Min, 24h, 1 Mês, 6 Meses,
    1 Ano, Vitalício), Slide Duration Controls (1.5s, 2s, 3s, 5s, Custom),
    Hardware Device Locking, Guest Lock (No Music + Watermark for Visitors),
-   PRO Unlocked Mode for Paid Licensed Clients & 4K Exporter.
+   PRO Unlocked Mode for Paid Licensed Clients, CRM Client Management Dashboard,
+   Mobile Memory Auto-Optimization (Zero "Ah, não!" Chrome Crashes) & 4K Exporter.
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -247,7 +248,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- STRICT PERMISSION CHECK: LICENSE OR REGISTERED USER UNLOCKS ALL FEATURES ---
   function isFullFeatureUnlocked() {
-    // If a PRO License key is active OR a user is logged in, features are UNLOCKED!
     return LicenseSystem.isLicensed || AuthSystem.currentUser !== null;
   }
 
@@ -290,6 +290,162 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // --- CLIENT CRM MANAGEMENT DASHBOARD ---
+  const modalClientsCRM = document.getElementById('modal-clients-crm');
+  const btnOpenClientsCRM = document.getElementById('btn-open-clients-crm');
+
+  if (btnOpenClientsCRM) {
+    btnOpenClientsCRM.addEventListener('click', () => {
+      renderCRMClientTable();
+      modalClientsCRM.classList.remove('hidden');
+    });
+  }
+
+  function renderCRMClientTable() {
+    const container = document.getElementById('crm-clients-table-container');
+    const clients = LicenseSystem.getAllClients();
+
+    if (!clients || clients.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state padding-lg" style="text-align:center;">
+          <i class="fa-solid fa-users text-orange" style="font-size:36px; margin-bottom:10px;"></i>
+          <h4>Nenhum Cliente Cadastrado Ainda</h4>
+          <p class="info-text">Quando você gerar uma chave no "Painel do Dono" ou um cliente ativar uma licença, o registro aparecerá aqui!</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--glass-border-blue); color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+            <th style="padding:10px;">Cliente / E-mail</th>
+            <th style="padding:10px;">Plano Contratado</th>
+            <th style="padding:10px;">Chave de Licença</th>
+            <th style="padding:10px;">Aparelho Vinculado</th>
+            <th style="padding:10px;">Status / Validade</th>
+            <th style="padding:10px; text-align:right;">Ações do Dono</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${clients.map(cli => {
+            const isExpired = cli.expiresAt && Date.now() > cli.expiresAt;
+            const isRevoked = cli.status === 'revoked';
+            
+            let statusBadge = '<span class="quality-badge" style="background:rgba(16,185,129,0.2); color:#10b981;">🟢 Ativo</span>';
+            if (isRevoked) {
+              statusBadge = '<span class="quality-badge" style="background:rgba(239,68,68,0.2); color:#ef4444;">🔴 Bloqueado</span>';
+            } else if (isExpired) {
+              statusBadge = '<span class="quality-badge" style="background:rgba(245,158,11,0.2); color:#f59e0b;">⏳ Expirado</span>';
+            }
+
+            let expStr = 'Vitalício';
+            if (cli.expiresAt) {
+              expStr = new Date(cli.expiresAt).toLocaleDateString('pt-BR') + ' ' + new Date(cli.expiresAt).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            }
+
+            return `
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding:12px 10px;">
+                  <strong style="color:var(--text-main); display:block;">${cli.name}</strong>
+                  <span style="font-size:11px; color:var(--text-muted);">${cli.email || 'Sem e-mail'}</span>
+                </td>
+                <td style="padding:12px 10px;">
+                  <span class="photo-duration-badge"><i class="fa-solid fa-crown text-yellow"></i> ${cli.planName}</span>
+                </td>
+                <td style="padding:12px 10px; font-family:var(--font-mono); font-size:11px; color:var(--orange-main); font-weight:700;">
+                  ${cli.key}
+                </td>
+                <td style="padding:12px 10px; font-family:var(--font-mono); font-size:11px;">
+                  ${cli.deviceId ? `<span style="color:#38bdf8;"><i class="fa-solid fa-laptop"></i> ${cli.deviceId}</span>` : '<span style="color:var(--text-muted); font-style:italic;">Nenhum (Livre)</span>'}
+                </td>
+                <td style="padding:12px 10px;">
+                  ${statusBadge}
+                  <span style="font-size:11px; display:block; color:var(--text-muted); margin-top:2px;">Vence: ${expStr}</span>
+                </td>
+                <td style="padding:12px 10px; text-align:right;">
+                  <div style="display:flex; gap:4px; justify-content:flex-end; flex-wrap:wrap;">
+                    <button class="btn btn-xs btn-blue-outline btn-send-wa" data-name="${cli.name}" data-key="${cli.key}" title="Enviar Chave pelo WhatsApp">
+                      <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> WhatsApp
+                    </button>
+                    <button class="btn btn-xs btn-secondary btn-reset-dev" data-id="${cli.id}" title="Desvincular Aparelho Antigo">
+                      <i class="fa-solid fa-rotate-left"></i> Liberar PC
+                    </button>
+                    <button class="btn btn-xs btn-orange btn-renew-cli" data-id="${cli.id}" data-name="${cli.name}" title="Renovar Licença">
+                      <i class="fa-solid fa-repeat"></i> Renovar
+                    </button>
+                    <button class="btn btn-xs btn-danger-outline btn-revoke-cli" data-id="${cli.id}" title="Bloquear / Cancelar Licença">
+                      <i class="fa-solid fa-ban"></i>
+                    </button>
+                    <button class="btn btn-xs btn-icon-danger btn-del-cli" data-id="${cli.id}" title="Excluir Registro">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // Bind CRM action buttons
+    container.querySelectorAll('.btn-send-wa').forEach(b => {
+      b.addEventListener('click', () => {
+        const name = b.getAttribute('data-name');
+        const key = b.getAttribute('data-key');
+        const text = encodeURIComponent(`Olá ${name}! Segue sua Chave de Licença do GN SLIDES PRO 4K:\n\n🔑 Key: ${key}\n\nAbra o sistema e clique em "Ativar PRO" para liberar todas as funções!`);
+        window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+      });
+    });
+
+    container.querySelectorAll('.btn-reset-dev').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const res = LicenseSystem.resetClientDevice(id);
+        renderCRMClientTable();
+        showToast(res.message, 'success');
+      });
+    });
+
+    container.querySelectorAll('.btn-renew-cli').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const name = b.getAttribute('data-name');
+        const newPlan = prompt(`Escolha o novo plano para o cliente ${name}:\n\nDigite: 1MES, 6MESES, 1ANO ou VITALICIO`, '1ANO');
+        if (newPlan) {
+          const res = LicenseSystem.renewClientLicense(id, newPlan.trim().toUpperCase());
+          renderCRMClientTable();
+          updateLicenseUI();
+          showToast(res.message, 'success');
+        }
+      });
+    });
+
+    container.querySelectorAll('.btn-revoke-cli').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        if (confirm('Tem certeza que deseja BLOQUEAR/REVOGAR a licença deste cliente?')) {
+          const res = LicenseSystem.revokeClientLicense(id);
+          renderCRMClientTable();
+          updateLicenseUI();
+          showToast(res.message, 'info');
+        }
+      });
+    });
+
+    container.querySelectorAll('.btn-del-cli').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        if (confirm('Excluir permanentemente este registro de cliente?')) {
+          const res = LicenseSystem.deleteClientRecord(id);
+          renderCRMClientTable();
+          showToast(res.message, 'info');
+        }
+      });
+    });
+  }
+
   // --- LICENSE SYSTEM UI & HANDLERS ---
   const modalLicense = document.getElementById('modal-license');
   const btnActivateLicense = document.getElementById('btn-activate-license');
@@ -313,7 +469,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res.success) {
         updateLicenseUI();
         modalLicense.classList.add('hidden');
-        // Unlocks music immediately on license activation
         loadStockAudioTrack();
         SlideshowEngine.requestRender();
         showToast(res.message, 'success');
@@ -346,7 +501,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const key = LicenseSystem.generateValidKey(name, plan);
       document.getElementById('admin-generated-key-output').value = key;
-      showToast(`Nova chave gerada para o plano ${plan}!`, 'info');
+      
+      // Auto register generated key in CRM DB
+      LicenseSystem.registerClientRecord(name, '', plan, key);
+
+      showToast(`Nova chave gerada e cadastrada para o cliente ${name}!`, 'info');
     });
   }
 
@@ -405,7 +564,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // --- UPLOAD HANDLERS: PHOTOS ---
+  // --- UPLOAD HANDLERS: PHOTOS & FAST COMPRESSION FOR MOBILE RAM ---
   const inputPhotos = document.getElementById('input-upload-photos');
   const dropZonePhotos = document.getElementById('drop-zone-photos');
 
@@ -435,10 +594,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (files.length > 0) handlePhotoFilesUpload(files);
   });
 
+  // High-performance mobile photo downscaler (Prevents Chrome Mobile "Ah, não!" memory crash)
+  function compressAndResizePhoto(file, maxWidth = 1920, maxHeight = 1920, quality = 0.85) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth || height > maxHeight) {
+            if (width / height > maxWidth / maxHeight) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function handlePhotoFilesUpload(files) {
-    showToast(`Carregando ${files.length} foto(s)...`, 'info');
+    showToast(`Otimizando ${files.length} foto(s) para celular...`, 'info');
     for (let file of files) {
-      const dataUrl = await fileToDataURL(file);
+      const dataUrl = await compressAndResizePhoto(file);
+      if (!dataUrl) continue;
       const newSlide = {
         id: 'slide_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         title: file.name,
@@ -1074,7 +1271,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('input-outro-title').value = AppState.outroTitle;
     document.getElementById('input-outro-subtitle').value = AppState.outroSubtitle;
 
-    // Load music automatically if full PRO features unlocked or license is active
     if (isFullFeatureUnlocked()) {
       loadStockAudioTrack();
     } else {
@@ -1272,15 +1468,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function fileToDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result);
-      reader.onerror = err => reject(err);
-      reader.readAsDataURL(file);
-    });
   }
 
   function showToast(message, type = 'info') {

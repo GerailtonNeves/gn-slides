@@ -42,6 +42,10 @@
           <button id="btn-logout" class="btn-xs btn-danger-outline hidden" title="Sair da Conta"><i class="fa-solid fa-power-off"></i></button>
         </div>
 
+        <button id="btn-open-clients-crm" class="btn btn-secondary" title="Painel de Gestão de Clientes">
+          <i class="fa-solid fa-users-gear text-orange"></i> Clientes
+        </button>
+
         <button id="btn-activate-license" class="btn btn-secondary" title="Ativar Licença PRO">
           <i class="fa-solid fa-key text-yellow"></i> <span id="license-badge-text">Ativar PRO</span>
         </button>
@@ -784,6 +788,35 @@
 
         <div class="modal-footer">
           <button class="btn btn-secondary" id="btn-close-share-footer">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: PAINEL DE GESTÃO DE CLIENTES & LICENÇAS (CRM ADMIN) -->
+    <div id="modal-clients-crm" class="modal-overlay hidden">
+      <div class="modal-card glass-modal" style="max-width: 950px;">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-users-gear text-orange" style="font-size:22px;"></i>
+            <h3>Painel de Gestão de Clientes & Licenças (CRM Admin)</h3>
+          </div>
+          <button class="btn-close-modal" id="btn-close-crm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body" style="gap:16px;">
+          <div class="info-card-blue">
+            <i class="fa-solid fa-circle-info text-cyan"></i>
+            <span>Gerencie todas as licenças dos seus clientes, desvincule aparelhos antigos, renove planos ou cancele licenças com 1 clique!</span>
+          </div>
+
+          <!-- List of Clients Table/Cards -->
+          <div id="crm-clients-table-container" style="overflow-x:auto; max-height:450px;">
+            <!-- Dynamically populated table -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btn-close-crm-footer">Fechar</button>
         </div>
       </div>
     </div>

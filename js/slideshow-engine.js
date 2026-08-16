@@ -1,6 +1,6 @@
 /* ==========================================================================
-   BLUE-YELLOW STUDIO PRO - HIGH-PERFORMANCE SLIDESHOW CANVAS ENGINE
-   Electric Royal Blue & Sunburst Gold Degradê Luxury Theme Edition
+   GN SLIDES PRO 4K - HIGH-PERFORMANCE CANVAS SLIDESHOW ENGINE
+   Optimized for Desktop, Mobile & Tablet Browsers (Zero Memory Crash)
    ========================================================================== */
 
 window.SlideshowEngine = {
@@ -60,6 +60,10 @@ window.SlideshowEngine = {
 
   transitionList: ['fade', 'slide-left', 'slide-right', 'slide-up', 'zoom-in', 'wipe-circle', 'blur'],
 
+  isMobileDevice: function() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+  },
+
   init: function(canvasElement) {
     this.canvas = canvasElement;
     this.ctx = canvasElement.getContext('2d', { alpha: false, desynchronized: true });
@@ -73,7 +77,9 @@ window.SlideshowEngine = {
   },
 
   updateResolution: function() {
-    const is4K = (this.resolution === '4K');
+    // On mobile devices, force 1080p preview canvas to prevent Mobile Chrome RAM crashes ("Ah, não!")
+    const isMobile = this.isMobileDevice();
+    const is4K = !isMobile && (this.resolution === '4K');
     const baseWidth = is4K ? 3840 : 1920;
     const baseHeight = is4K ? 2160 : 1080;
 
@@ -97,6 +103,15 @@ window.SlideshowEngine = {
   setSlides: async function(slideDataList) {
     this.slides = slideDataList;
     this.calculateTotalDuration();
+
+    // Clean up unused cached images to prevent mobile RAM leaks
+    const currentSlideIds = new Set(slideDataList.map(s => s.id));
+    for (let id of this.loadedImages.keys()) {
+      if (!currentSlideIds.has(id)) {
+        this.loadedImages.delete(id);
+        this.blurCache.delete(id);
+      }
+    }
     
     const loadPromises = slideDataList.map((slide) => {
       return new Promise((resolve) => {
@@ -126,22 +141,22 @@ window.SlideshowEngine = {
   generateBlurCache: function(slideId, img) {
     try {
       const offscreen = document.createElement('canvas');
-      offscreen.width = 480;
-      offscreen.height = 270;
+      offscreen.width = 360;
+      offscreen.height = 202;
       const oCtx = offscreen.getContext('2d');
-      oCtx.filter = 'blur(12px) brightness(0.65)';
+      oCtx.filter = 'blur(10px) brightness(0.65)';
       
       const imgRatio = img.width / img.height;
-      const oRatio = 480 / 270;
+      const oRatio = 360 / 202;
       let drawW, drawH;
 
       if (imgRatio > oRatio) {
-        drawH = 270; drawW = drawH * imgRatio;
+        drawH = 202; drawW = drawH * imgRatio;
       } else {
-        drawW = 480; drawH = drawW / imgRatio;
+        drawW = 360; drawH = drawW / imgRatio;
       }
-      const drawX = (480 - drawW) / 2;
-      const drawY = (270 - drawH) / 2;
+      const drawX = (360 - drawW) / 2;
+      const drawY = (202 - drawH) / 2;
 
       oCtx.drawImage(img, drawX, drawY, drawW, drawH);
       this.blurCache.set(slideId, offscreen);
@@ -172,10 +187,7 @@ window.SlideshowEngine = {
   },
 
   play: function() {
-    if (this.slides.length === 0 && !this.introEnabled && !this.outroEnabled) return;
-    if (this.currentTime >= this.totalDuration) {
-      this.currentTime = 0;
-    }
+    if (this.isPlaying) return;
     this.isPlaying = true;
     this.lastTimestamp = performance.now();
     this.loop();
@@ -189,493 +201,360 @@ window.SlideshowEngine = {
     }
   },
 
-  seek: function(timeSec) {
-    this.currentTime = Math.max(0, Math.min(this.totalDuration, timeSec));
-    this.requestRender();
+  seek: function(timeInSeconds) {
+    this.currentTime = Math.max(0, Math.min(timeInSeconds, this.totalDuration));
     if (this.onTimeUpdate) {
       this.onTimeUpdate(this.currentTime, this.totalDuration);
     }
+    this.requestRender();
   },
 
   loop: function() {
     if (!this.isPlaying) return;
 
     const now = performance.now();
-    const dt = (now - this.lastTimestamp) / 1000.0;
+    const delta = (now - this.lastTimestamp) / 1000;
     this.lastTimestamp = now;
 
-    this.currentTime += dt;
+    this.currentTime += delta;
 
     if (this.currentTime >= this.totalDuration) {
       this.currentTime = this.totalDuration;
-      this.renderFrame(this.currentTime);
       this.pause();
+      if (this.onTimeUpdate) this.onTimeUpdate(this.currentTime, this.totalDuration);
       if (this.onEnded) this.onEnded();
       return;
     }
 
-    this.renderFrame(this.currentTime);
     if (this.onTimeUpdate) {
       this.onTimeUpdate(this.currentTime, this.totalDuration);
     }
 
+    this.renderFrame(this.currentTime);
     this.animFrameId = requestAnimationFrame(() => this.loop());
   },
 
-  renderFrame: function(timeSec) {
+  renderFrame: function(time) {
     if (!this.ctx) return;
+    const w = this.width;
+    const h = this.height;
 
-    // 1. Intro Screen Check
-    const introTime = (this.introEnabled && (this.introTitle || this.introPresenter || this.introTag)) ? (this.introDuration || 3.5) : 0;
-    if (timeSec < introTime) {
-      this.renderCinematicIntro(timeSec, introTime);
+    // Clear background with dark luxury ocean blue
+    this.ctx.fillStyle = '#090f1e';
+    this.ctx.fillRect(0, 0, w, h);
+
+    const introDur = (this.introEnabled && (this.introTitle || this.introPresenter || this.introTag)) ? (this.introDuration || 3.5) : 0;
+    const outroDur = (this.outroEnabled && (this.outroTitle || this.outroSubtitle)) ? (this.outroDuration || 3.5) : 0;
+    const photosTotalDur = this.slides.reduce((acc, s) => acc + (s.duration || 3.5), 0);
+
+    // 1. INTRO SCREEN RENDER
+    if (introDur > 0 && time < introDur) {
+      this.renderIntroScreen(time, introDur);
+      if (window.LicenseSystem) window.LicenseSystem.drawWatermarkIfNeeded(this.ctx, w, h);
       return;
     }
 
-    // 2. Outro Screen Check
-    const slidesTotalTime = this.slides.reduce((acc, s) => acc + (s.duration || 3.5), 0);
-    const outroTime = (this.outroEnabled && (this.outroTitle || this.outroSubtitle)) ? (this.outroDuration || 3.5) : 0;
-    const slidesEndTime = introTime + slidesTotalTime;
-
-    if (timeSec >= slidesEndTime && outroTime > 0) {
-      const timeInOutro = timeSec - slidesEndTime;
-      this.renderCinematicOutro(timeInOutro, outroTime);
+    // 2. OUTRO SCREEN RENDER
+    const outroStartTime = introDur + photosTotalDur;
+    if (outroDur > 0 && time >= outroStartTime) {
+      const outroRelTime = time - outroStartTime;
+      this.renderOutroScreen(outroRelTime, outroDur);
+      if (window.LicenseSystem) window.LicenseSystem.drawWatermarkIfNeeded(this.ctx, w, h);
       return;
     }
 
-    // 3. Photo Slides Rendering
-    const slidesTime = timeSec - introTime;
-
+    // 3. PHOTO SLIDES RENDER WITH AUTOMATIC VARIED CINEMATIC TRANSITIONS
     if (this.slides.length === 0) {
-      this.renderEmptyState();
+      this.renderEmptyStateScreen();
+      if (window.LicenseSystem) window.LicenseSystem.drawWatermarkIfNeeded(this.ctx, w, h);
       return;
     }
 
+    let photoTime = time - introDur;
+    let currentIdx = 0;
     let accumulatedTime = 0;
-    let currentSlideIdx = 0;
-    let slideStartTime = 0;
 
     for (let i = 0; i < this.slides.length; i++) {
       const slideDur = this.slides[i].duration || 3.5;
-      if (slidesTime >= accumulatedTime && slidesTime <= accumulatedTime + slideDur) {
-        currentSlideIdx = i;
-        slideStartTime = accumulatedTime;
+      if (photoTime >= accumulatedTime && photoTime < accumulatedTime + slideDur) {
+        currentIdx = i;
         break;
       }
       accumulatedTime += slideDur;
-      if (i === this.slides.length - 1) {
-        currentSlideIdx = i;
-        slideStartTime = accumulatedTime - slideDur;
-      }
     }
 
-    const currentSlide = this.slides[currentSlideIdx];
-    const currentSlideDur = currentSlide.duration || 3.5;
-    const timeInSlide = slidesTime - slideStartTime;
+    if (currentIdx >= this.slides.length) currentIdx = this.slides.length - 1;
 
-    const transDur = Math.min(this.transitionDuration, currentSlideDur * 0.5);
-    const nextSlideIdx = (currentSlideIdx + 1) % this.slides.length;
-    const isTransitioning = (timeInSlide >= currentSlideDur - transDur) && (currentSlideIdx < this.slides.length - 1);
+    const currentSlide = this.slides[currentIdx];
+    const slideDur = currentSlide.duration || 3.5;
+    const slideProgressTime = photoTime - accumulatedTime;
+    const isLastSlide = (currentIdx === this.slides.length - 1);
 
-    this.ctx.fillStyle = '#040e22';
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    const transDur = this.transitionDuration;
+    const isInTransition = (!isLastSlide && slideProgressTime >= (slideDur - transDur));
 
-    const img1 = this.loadedImages.get(currentSlide.id);
-    if (img1) {
-      this.drawSingleSlide(img1, currentSlide.id, currentSlideIdx, timeInSlide / currentSlideDur, 1.0);
+    if (isInTransition) {
+      const nextIdx = currentIdx + 1;
+      const nextSlide = this.slides[nextIdx];
+      const progress = (slideProgressTime - (slideDur - transDur)) / transDur;
+
+      const transType = (currentSlide.transition && currentSlide.transition !== 'default') 
+        ? currentSlide.transition 
+        : this.getTransitionTypeForIndex(currentIdx);
+
+      this.renderTransition(currentSlide, nextSlide, progress, transType, slideProgressTime, slideDur);
+    } else {
+      const img = this.loadedImages.get(currentSlide.id);
+      this.renderSingleSlide(currentSlide, img, slideProgressTime, slideDur, 1.0);
     }
 
-    if (isTransitioning) {
-      const nextSlide = this.slides[nextSlideIdx];
-      const img2 = this.loadedImages.get(nextSlide.id);
-      if (img2) {
-        const transProgress = (timeInSlide - (currentSlideDur - transDur)) / transDur;
-        
-        let transType = currentSlide.transition;
-        if (!transType || transType === 'default' || transType === 'random') {
-          const transIndex = currentSlideIdx % this.transitionList.length;
-          transType = this.transitionList[transIndex];
-        }
+    // Overlay caption or title
+    this.renderSlideOverlayText(currentIdx, currentSlide);
 
-        this.drawTransition(img1, img2, currentSlide.id, nextSlide.id, currentSlideIdx, nextSlideIdx, transProgress, transType);
-      }
-    }
-
-    this.applyGlobalFilter();
-    this.drawTextOverlay(currentSlide, currentSlideIdx, timeInSlide);
-
-    // Render Watermark for Free Trial Mode
+    // Commercial License Watermark (for Guest Mode)
     if (window.LicenseSystem) {
-      window.LicenseSystem.drawWatermarkIfNeeded(this.ctx, this.width, this.height);
+      window.LicenseSystem.drawWatermarkIfNeeded(this.ctx, w, h);
     }
   },
 
-  // Electric Blue & Sunburst Yellow Cinematic Intro Opening Screen
-  renderCinematicIntro: function(currentTime, introTotalTime) {
-    const progress = currentTime / introTotalTime;
-
-    this.ctx.fillStyle = '#040e22';
-    this.ctx.fillRect(0, 0, this.width, this.height);
-
-    const radGlow = this.ctx.createRadialGradient(this.width / 2, this.height / 2, 50, this.width / 2, this.height / 2, this.width * 0.5);
-    radGlow.addColorStop(0, 'rgba(0, 200, 255, 0.35)');
-    radGlow.addColorStop(0.5, 'rgba(255, 215, 0, 0.3)');
-    radGlow.addColorStop(1, 'rgba(0,0,0,0)');
-    this.ctx.fillStyle = radGlow;
-    this.ctx.fillRect(0, 0, this.width, this.height);
-
-    let alpha = 1.0;
-    if (progress < 0.2) alpha = progress / 0.2;
-    if (progress > 0.8) alpha = (1.0 - progress) / 0.2;
-
-    this.ctx.save();
-    this.ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-    this.ctx.textAlign = 'center';
-
-    // 1. Top Category Tag
-    if (this.introTag) {
-      const tagSize = Math.round(this.height * 0.022);
-      this.ctx.font = `700 ${tagSize}px 'Plus Jakarta Sans', sans-serif`;
-      this.ctx.fillStyle = '#ffd700';
-      this.ctx.letterSpacing = '6px';
-      this.ctx.shadowColor = '#ffd700';
-      this.ctx.shadowBlur = 14;
-      this.ctx.fillText(this.introTag.toUpperCase(), this.width / 2, this.height * 0.32);
-    }
-
-    // 2. Presenter Tag
-    if (this.introPresenter) {
-      const pSize = Math.round(this.height * 0.028);
-      this.ctx.font = `700 ${pSize}px 'Plus Jakarta Sans', sans-serif`;
-      this.ctx.fillStyle = '#00c8ff';
-      this.ctx.letterSpacing = '8px';
-      this.ctx.shadowColor = '#00c8ff';
-      this.ctx.shadowBlur = 14;
-      this.ctx.fillText(this.introPresenter.toUpperCase(), this.width / 2, this.height * 0.39);
-    }
-
-    // 3. Main Title
-    if (this.introTitle) {
-      const tSize = Math.round(this.height * 0.065);
-      this.ctx.font = `800 ${tSize}px 'Outfit', sans-serif`;
-      this.ctx.fillStyle = '#ffffff';
-      this.ctx.shadowColor = '#ffd700';
-      this.ctx.shadowBlur = 25;
-      this.ctx.fillText(this.introTitle, this.width / 2, this.height * 0.51);
-    }
-
-    // Glowing Divider Line
-    this.ctx.strokeStyle = '#00c8ff';
-    this.ctx.lineWidth = Math.round(this.height * 0.003);
-    this.ctx.shadowColor = '#00c8ff';
-    this.ctx.shadowBlur = 15;
-    this.ctx.beginPath();
-    const lineWidth = this.width * 0.3 * Math.min(1, progress * 2);
-    this.ctx.moveTo(this.width / 2 - lineWidth / 2, this.height * 0.57);
-    this.ctx.lineTo(this.width / 2 + lineWidth / 2, this.height * 0.57);
-    this.ctx.stroke();
-
-    // 4. Subtitle Line
-    if (this.introSubtitle) {
-      const sSize = Math.round(this.height * 0.035);
-      this.ctx.font = `600 ${sSize}px 'Plus Jakarta Sans', sans-serif`;
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-      this.ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      this.ctx.shadowBlur = 8;
-      this.ctx.fillText(this.introSubtitle, this.width / 2, this.height * 0.66);
-    }
-
-    this.ctx.restore();
+  getTransitionTypeForIndex: function(idx) {
+    if (this.globalTransition !== 'random') return this.globalTransition;
+    return this.transitionList[idx % this.transitionList.length];
   },
 
-  // Electric Blue & Sunburst Yellow Cinematic Outro Ending Screen
-  renderCinematicOutro: function(currentTime, outroTotalTime) {
-    const progress = currentTime / outroTotalTime;
+  renderIntroScreen: function(time, duration) {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
 
-    this.ctx.fillStyle = '#040e22';
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    const fade = Math.min(1, Math.min(time / 0.8, (duration - time) / 0.8));
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, fade);
 
-    const radGlow = this.ctx.createRadialGradient(this.width / 2, this.height / 2, 50, this.width / 2, this.height / 2, this.width * 0.55);
-    radGlow.addColorStop(0, 'rgba(255, 215, 0, 0.38)');
-    radGlow.addColorStop(0.5, 'rgba(0, 200, 255, 0.25)');
-    radGlow.addColorStop(1, 'rgba(0,0,0,0)');
-    this.ctx.fillStyle = radGlow;
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    const grad = ctx.createRadialGradient(w/2, h/2, 100, w/2, h/2, w*0.8);
+    grad.addColorStop(0, '#0c1a36');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
 
-    let alpha = 1.0;
-    if (progress < 0.2) alpha = progress / 0.2;
-    if (progress > 0.8) alpha = (1.0 - progress) / 0.2;
+    ctx.strokeStyle = 'rgba(2, 132, 199, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(60, 60, w - 120, h - 120);
 
-    this.ctx.save();
-    this.ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-    this.ctx.textAlign = 'center';
+    const tag = (this.introTag || 'EDIÇÃO ESPECIAL').toUpperCase();
+    ctx.font = "600 32px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#0284c7";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(tag, w/2, h/2 - 120);
 
-    const iconChar = this.outroIcon || '♥';
-    const iconSize = Math.round(this.height * 0.05);
-    this.ctx.font = `700 ${iconSize}px 'FontAwesome', sans-serif`;
-    this.ctx.fillStyle = '#ffd700';
-    this.ctx.shadowColor = '#ffd700';
-    this.ctx.shadowBlur = 20;
-    this.ctx.fillText(iconChar, this.width / 2, this.height * 0.38);
+    ctx.font = "400 28px 'Outfit', sans-serif";
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(this.introPresenter || 'Apresenta', w/2, h/2 - 60);
 
-    if (this.outroTitle) {
-      const tSize = Math.round(this.height * 0.065);
-      this.ctx.font = `800 ${tSize}px 'Outfit', sans-serif`;
-      this.ctx.fillStyle = '#ffffff';
-      this.ctx.shadowColor = '#00c8ff';
-      this.ctx.shadowBlur = 25;
-      this.ctx.fillText(this.outroTitle, this.width / 2, this.height * 0.5);
-    }
+    const title = this.introTitle || 'CAPELA SANTA INÊS';
+    ctx.font = "800 72px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "rgba(249, 115, 22, 0.8)";
+    ctx.shadowBlur = 30;
+    ctx.fillText(title, w/2, h/2 + 20);
 
-    if (this.outroSubtitle) {
-      const sSize = Math.round(this.height * 0.035);
-      this.ctx.font = `600 ${sSize}px 'Plus Jakarta Sans', sans-serif`;
-      this.ctx.fillStyle = '#ffd700';
-      this.ctx.shadowColor = '#ffd700';
-      this.ctx.shadowBlur = 12;
-      this.ctx.fillText(this.outroSubtitle, this.width / 2, this.height * 0.62);
-    }
+    ctx.shadowBlur = 0;
+    ctx.font = "500 34px 'Outfit', sans-serif";
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillText(this.introSubtitle || 'Um Filme Especial de Fotos e Música', w/2, h/2 + 110);
 
-    this.ctx.restore();
+    ctx.restore();
   },
 
-  drawSingleSlide: function(img, slideId, slideIdx, progress, opacity) {
+  renderOutroScreen: function(time, duration) {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+
+    const fade = Math.min(1, Math.min(time / 0.8, (duration - time) / 0.8));
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, fade);
+
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#020617');
+    grad.addColorStop(0.5, '#07162c');
+    grad.addColorStop(1, '#020617');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    const icon = this.outroIcon || '♥';
+    ctx.font = "84px 'Outfit', sans-serif";
+    ctx.fillStyle = "#f97316";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(249, 115, 22, 0.9)";
+    ctx.shadowBlur = 40;
+    ctx.fillText(icon, w/2, h/2 - 100);
+
+    ctx.shadowBlur = 0;
+    ctx.font = "800 68px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(this.outroTitle || 'Obrigado por Assistir!', w/2, h/2 + 20);
+
+    ctx.font = "500 32px 'Outfit', sans-serif";
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillText(this.outroSubtitle || 'Guardado para Sempre no Coração', w/2, h/2 + 100);
+
+    ctx.restore();
+  },
+
+  renderEmptyStateScreen: function() {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.font = "600 36px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillStyle = "#0284c7";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("GN SLIDES PRO 4K", w/2, h/2 - 30);
+
+    ctx.font = "400 24px 'Outfit', sans-serif";
+    ctx.fillStyle = "#64748b";
+    ctx.fillText("Adicione fotos no menu à esquerda para visualizar o vídeo aqui.", w/2, h/2 + 30);
+  },
+
+  renderSingleSlide: function(slide, img, progressTime, totalSlideDur, alpha = 1.0) {
     if (!img) return;
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
 
-    this.ctx.save();
-    this.ctx.globalAlpha = opacity;
+    ctx.save();
+    ctx.globalAlpha = alpha;
 
+    // 1. Draw Blurred Background if contain-blur mode
+    if (this.imageFitMode === 'contain-blur') {
+      const blurImg = this.blurCache.get(slide.id);
+      if (blurImg) {
+        ctx.drawImage(blurImg, 0, 0, w, h);
+      } else {
+        ctx.fillStyle = '#090f1e';
+        ctx.fillRect(0, 0, w, h);
+      }
+    } else if (this.imageFitMode === 'contain-black') {
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    // 2. Compute Fit & Ken Burns Movement
     let scale = 1.0;
-    let offsetX = 0;
-    let offsetY = 0;
+    let dx = 0, dy = 0;
 
     if (this.kenBurnsEnabled) {
-      const dir = slideIdx % 4;
-      if (dir === 0) scale = 1.0 + progress * 0.1;
-      else if (dir === 1) scale = 1.1 - progress * 0.1;
-      else if (dir === 2) { scale = 1.08; offsetX = (progress - 0.5) * 40; }
-      else if (dir === 3) { scale = 1.08; offsetX = (0.5 - progress) * 40; }
+      const progress = progressTime / totalSlideDur;
+      scale = 1.0 + (progress * 0.08); // Suave 8% zoom
     }
 
-    if (this.imageFitMode === 'contain-blur') {
-      const cachedBlur = this.blurCache.get(slideId);
-      if (cachedBlur) {
-        this.ctx.drawImage(cachedBlur, 0, 0, this.width, this.height);
+    const imgRatio = img.width / img.height;
+    const screenRatio = w / h;
+    let drawW, drawH, drawX, drawY;
+
+    if (this.imageFitMode === 'cover') {
+      if (imgRatio > screenRatio) {
+        drawH = h * scale; drawW = drawH * imgRatio;
       } else {
-        this.drawImageCover(img, scale * 1.15, offsetX, offsetY);
+        drawW = w * scale; drawH = drawW / imgRatio;
       }
-
-      this.drawImageContain(img, scale);
-    } else if (this.imageFitMode === 'cover') {
-      this.drawImageCover(img, scale, offsetX, offsetY);
     } else {
-      this.drawImageContain(img, scale);
+      // contain mode
+      if (imgRatio > screenRatio) {
+        drawW = w * scale; drawH = drawW / imgRatio;
+      } else {
+        drawH = h * scale; drawW = drawH * imgRatio;
+      }
     }
 
-    this.ctx.restore();
-  },
+    drawX = (w - drawW) / 2;
+    drawY = (h - drawH) / 2;
 
-  drawImageCover: function(img, scale, offsetX = 0, offsetY = 0) {
-    const imgRatio = img.width / img.height;
-    const canvasRatio = this.width / this.height;
-    let drawW, drawH;
+    ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-    if (imgRatio > canvasRatio) {
-      drawH = this.height * scale;
-      drawW = drawH * imgRatio;
-    } else {
-      drawW = this.width * scale;
-      drawH = drawW / imgRatio;
-    }
-
-    const drawX = (this.width - drawW) / 2 + offsetX;
-    const drawY = (this.height - drawH) / 2 + offsetY;
-
-    this.ctx.drawImage(img, drawX, drawY, drawW, drawH);
-  },
-
-  drawImageContain: function(img, scale) {
-    const imgRatio = img.width / img.height;
-    const canvasRatio = this.width / this.height;
-    let drawW, drawH;
-
-    if (imgRatio > canvasRatio) {
-      drawW = this.width * scale;
-      drawH = drawW / imgRatio;
-    } else {
-      drawH = this.height * scale;
-      drawW = drawH * imgRatio;
-    }
-
-    const drawX = (this.width - drawW) / 2;
-    const drawY = (this.height - drawH) / 2;
-
-    this.ctx.drawImage(img, drawX, drawY, drawW, drawH);
-  },
-
-  drawTransition: function(img1, img2, id1, id2, idx1, idx2, progress, type) {
-    const p = Math.max(0, Math.min(1, progress));
-
-    if (type === 'fade' || type === 'blur') {
-      this.ctx.save();
-      this.ctx.globalAlpha = p;
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    } else if (type === 'slide-left') {
-      this.ctx.save();
-      this.ctx.translate(-p * this.width, 0);
-      this.drawSingleSlide(img1, id1, idx1, 1.0, 1.0);
-      this.ctx.translate(this.width, 0);
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    } else if (type === 'slide-right') {
-      this.ctx.save();
-      this.ctx.translate(p * this.width, 0);
-      this.drawSingleSlide(img1, id1, idx1, 1.0, 1.0);
-      this.ctx.translate(-this.width, 0);
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    } else if (type === 'slide-up') {
-      this.ctx.save();
-      this.ctx.translate(0, -p * this.height);
-      this.drawSingleSlide(img1, id1, idx1, 1.0, 1.0);
-      this.ctx.translate(0, this.height);
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    } else if (type === 'zoom-in') {
-      this.ctx.save();
-      this.ctx.globalAlpha = p;
-      const zoomScale = 0.8 + p * 0.2;
-      this.ctx.translate(this.width / 2, this.height / 2);
-      this.ctx.scale(zoomScale, zoomScale);
-      this.ctx.translate(-this.width / 2, -this.height / 2);
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    } else if (type === 'wipe-circle') {
-      this.ctx.save();
-      this.ctx.beginPath();
-      const maxRadius = Math.hypot(this.width, this.height) / 2;
-      this.ctx.arc(this.width / 2, this.height / 2, p * maxRadius, 0, Math.PI * 2);
-      this.ctx.clip();
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    } else {
-      this.ctx.save();
-      this.ctx.globalAlpha = p;
-      this.drawSingleSlide(img2, id2, idx2, 0, 1.0);
-      this.ctx.restore();
-    }
-  },
-
-  applyGlobalFilter: function() {
-    if (this.photoFilter === 'none') return;
-
-    this.ctx.save();
+    // Apply Filter if selected
     if (this.photoFilter === 'orange-blue') {
-      const grad = this.ctx.createLinearGradient(0, 0, this.width, this.height);
-      grad.addColorStop(0, 'rgba(0, 200, 255, 0.08)');
-      grad.addColorStop(1, 'rgba(255, 215, 0, 0.08)');
-      this.ctx.fillStyle = grad;
-      this.ctx.globalCompositeOperation = 'screen';
-      this.ctx.fillRect(0, 0, this.width, this.height);
-    } else if (this.photoFilter === 'warm') {
-      this.ctx.fillStyle = 'rgba(255, 215, 0, 0.1)';
-      this.ctx.globalCompositeOperation = 'color-burn';
-      this.ctx.fillRect(0, 0, this.width, this.height);
-    } else if (this.photoFilter === 'cyber') {
-      this.ctx.fillStyle = 'rgba(0, 200, 255, 0.12)';
-      this.ctx.globalCompositeOperation = 'screen';
-      this.ctx.fillRect(0, 0, this.width, this.height);
+      ctx.fillStyle = 'rgba(2, 132, 199, 0.05)';
+      ctx.fillRect(0, 0, w, h);
     }
-    this.ctx.restore();
+
+    ctx.restore();
   },
 
-  drawTextOverlay: function(slide, slideIdx, timeInSlide) {
-    if (this.textDisplay === 'disabled') return;
-    if (this.textDisplay === 'first-slide' && slideIdx !== 0) return;
-    if (this.textDisplay === 'first-4-slides' && slideIdx >= 4) return;
+  renderTransition: function(slideA, slideB, progress, transType, progressTime, slideDur) {
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
 
-    const slideCaption = slide.caption;
-    const globalTitle = (this.textDisplay === 'all-slides' || (this.textDisplay === 'first-4-slides' && slideIdx < 4) || (this.textDisplay === 'first-slide' && slideIdx === 0)) ? this.titleText : '';
-    const globalSub = (slideIdx === 0) ? this.subtitleText : '';
+    const imgA = this.loadedImages.get(slideA.id);
+    const imgB = this.loadedImages.get(slideB.id);
 
-    const textToDraw = slideCaption || globalTitle;
-    const subTextToDraw = slideCaption ? globalTitle : globalSub;
+    if (transType === 'fade') {
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
+    } else if (transType === 'slide-left') {
+      ctx.save();
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
+      ctx.restore();
 
-    if (!textToDraw && !subTextToDraw) return;
+      ctx.save();
+      ctx.translate(w * (1.0 - progress), 0);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
+      ctx.restore();
+    } else if (transType === 'slide-right') {
+      ctx.save();
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0);
+      ctx.restore();
 
-    this.ctx.save();
-    this.ctx.textAlign = 'center';
-
-    let posY = this.height / 2;
-    if (this.textPosition === 'bottom') posY = this.height * 0.82;
-    if (this.textPosition === 'top') posY = this.height * 0.2;
-
-    if (this.textStyle === 'dark-box') {
-      this.ctx.fillStyle = 'rgba(4, 14, 34, 0.88)';
-      this.ctx.fillRect(this.width * 0.12, posY - 70, this.width * 0.76, 140);
-      this.ctx.strokeStyle = 'rgba(255, 215, 0, 0.55)';
-      this.ctx.lineWidth = 3;
-      this.ctx.strokeRect(this.width * 0.12, posY - 70, this.width * 0.76, 140);
+      ctx.save();
+      ctx.translate(-w * (1.0 - progress), 0);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, 1.0);
+      ctx.restore();
+    } else if (transType === 'zoom-in') {
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
+      ctx.save();
+      ctx.globalAlpha = progress;
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
+      ctx.restore();
+    } else {
+      // Default Smooth Crossfade
+      this.renderSingleSlide(slideA, imgA, progressTime, slideDur, 1.0 - progress);
+      this.renderSingleSlide(slideB, imgB, 0, slideB.duration || 3.5, progress);
     }
-
-    if (textToDraw) {
-      const fontSize = Math.round(this.height * 0.054);
-      this.ctx.font = `800 ${fontSize}px 'Outfit', sans-serif`;
-
-      if (this.textStyle === 'orange-glow') {
-        this.ctx.shadowColor = '#ffd700';
-        this.ctx.shadowBlur = 20;
-        this.ctx.fillStyle = '#ffffff';
-      } else if (this.textStyle === 'blue-glow') {
-        this.ctx.shadowColor = '#00c8ff';
-        this.ctx.shadowBlur = 20;
-        this.ctx.fillStyle = '#ffd700';
-      } else if (this.textStyle === 'cyan-bright') {
-        this.ctx.shadowColor = '#0284c7';
-        this.ctx.shadowBlur = 15;
-        this.ctx.fillStyle = '#00c8ff';
-      } else if (this.textStyle === 'gold-glow') {
-        this.ctx.shadowColor = '#ffd700';
-        this.ctx.shadowBlur = 15;
-        this.ctx.fillStyle = '#fef08a';
-      } else {
-        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-        this.ctx.shadowBlur = 10;
-        this.ctx.fillStyle = '#ffffff';
-      }
-
-      this.ctx.fillText(textToDraw, this.width / 2, posY);
-    }
-
-    if (subTextToDraw) {
-      const subFontSize = Math.round(this.height * 0.032);
-      this.ctx.font = `700 ${subFontSize}px 'Plus Jakarta Sans', sans-serif`;
-      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-      this.ctx.shadowBlur = 8;
-      this.ctx.fillStyle = 'rgba(0, 200, 255, 0.95)';
-      this.ctx.fillText(subTextToDraw, this.width / 2, posY + Math.round(this.height * 0.058));
-    }
-
-    this.ctx.restore();
   },
 
-  renderEmptyState: function() {
-    this.ctx.fillStyle = '#040e22';
-    this.ctx.fillRect(0, 0, this.width, this.height);
+  renderSlideOverlayText: function(idx, slide) {
+    const textToShow = slide.caption || (idx < 4 ? this.titleText : '');
+    if (!textToShow || this.textDisplay === 'disabled') return;
+    if (this.textDisplay === 'first-slide' && idx > 0) return;
 
-    this.ctx.save();
-    this.ctx.textAlign = 'center';
-    this.ctx.fillStyle = '#00c8ff';
-    this.ctx.shadowColor = '#ffd700';
-    this.ctx.shadowBlur = 25;
-    this.ctx.font = '800 48px "Outfit", sans-serif';
-    this.ctx.fillText('GN SLIDES PRO (4K)', this.width / 2, this.height / 2 - 30);
+    const ctx = this.ctx;
+    const w = this.width;
+    const h = this.height;
 
-    this.ctx.fillStyle = '#ffd700';
-    this.ctx.shadowBlur = 0;
-    this.ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
-    this.ctx.fillText('Adicione fotos, abertura, encerramento e música para exportar seu vídeo MP4', this.width / 2, this.height / 2 + 30);
-    this.ctx.restore();
+    ctx.save();
+    ctx.font = "800 48px 'Plus Jakarta Sans', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    let posY = h / 2;
+    if (this.textPosition === 'top') posY = 180;
+    if (this.textPosition === 'bottom') posY = h - 180;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "rgba(249, 115, 22, 0.9)";
+    ctx.shadowBlur = 24;
+    ctx.fillText(textToShow, w/2, posY);
+
+    ctx.restore();
   }
 };
+
+window.SlideshowEngine = SlideshowEngine;

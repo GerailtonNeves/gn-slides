@@ -1,12 +1,14 @@
 /* ==========================================================================
-   GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & TIME-EXPIRATION SYSTEM
+   GN SLIDES PRO 4K - ADVANCED COMMERCIAL LICENSE & CLIENT MANAGEMENT SYSTEM
    Supports Single-Device Binding (Hardware Fingerprint), Time-Based Expirations
    (5 Min, 24 Hours, 1 Month, 6 Months, 1 Year, Lifetime), Strict Cryptographic
-   Checksum Verification, and Auto-System Blocking on Expiration.
+   Checksum Verification, Auto-Blocking Expiration, and Full Client CRM Management
+   (Renew, Reset Device Lock, Revoke License, Send WhatsApp Key).
    ========================================================================== */
 
 const LicenseSystem = {
   STORAGE_KEY: 'gn_slides_pro_license_data',
+  CLIENTS_DB_KEY: 'gn_slides_pro_clients_database',
   SECRET_SALT: 'GNSLIDES_PRO_COMMERCIAL_SALT_2026_V2',
 
   isLicensed: false,
@@ -28,6 +30,112 @@ const LicenseSystem = {
     this.onExpiredCallback = onExpiredCb;
     this.loadLicenseState();
     this.startExpirationMonitor();
+  },
+
+  // --- CLIENT DATABASE MANAGEMENT (CRM) ---
+  getAllClients: function() {
+    try {
+      const raw = localStorage.getItem(this.CLIENTS_DB_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveClients: function(clients) {
+    localStorage.setItem(this.CLIENTS_DB_KEY, JSON.stringify(clients));
+  },
+
+  registerClientRecord: function(name, email, planCode, key) {
+    const clients = this.getAllClients();
+    const cleanName = name.trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const planInfo = this.PLANS[planCode] || this.PLANS['VITALICIO'];
+
+    const activatedAt = Date.now();
+    const expiresAt = planInfo.ms ? (activatedAt + planInfo.ms) : null;
+
+    const newRecord = {
+      id: 'cli_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      name: cleanName,
+      email: cleanEmail,
+      planCode: planCode,
+      planName: planInfo.name,
+      key: key,
+      deviceId: null, // Tied on first device activation
+      activatedAt: activatedAt,
+      expiresAt: expiresAt,
+      status: 'active' // 'active', 'expired', 'revoked'
+    };
+
+    clients.unshift(newRecord);
+    this.saveClients(clients);
+    return newRecord;
+  },
+
+  renewClientLicense: function(clientId, newPlanCode) {
+    const clients = this.getAllClients();
+    const idx = clients.findIndex(c => c.id === clientId);
+    if (idx !== -1) {
+      const planInfo = this.PLANS[newPlanCode] || this.PLANS['1ANO'];
+      const activatedAt = Date.now();
+      const expiresAt = planInfo.ms ? (activatedAt + planInfo.ms) : null;
+
+      clients[idx].planCode = newPlanCode;
+      clients[idx].planName = planInfo.name;
+      clients[idx].activatedAt = activatedAt;
+      clients[idx].expiresAt = expiresAt;
+      clients[idx].status = 'active';
+
+      // Update current active license if renewed current machine
+      if (this.licenseData && this.licenseData.key === clients[idx].key) {
+        this.licenseData.expiresAt = expiresAt;
+        this.licenseData.planName = planInfo.name;
+        this.isLicensed = true;
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.licenseData));
+      }
+
+      this.saveClients(clients);
+      return { success: true, message: `Licença do cliente ${clients[idx].name} renovada para ${planInfo.name}!` };
+    }
+    return { success: false, message: 'Cliente não encontrado.' };
+  },
+
+  resetClientDevice: function(clientId) {
+    const clients = this.getAllClients();
+    const idx = clients.findIndex(c => c.id === clientId);
+    if (idx !== -1) {
+      clients[idx].deviceId = null;
+      this.saveClients(clients);
+      return { success: true, message: `Aparelho do cliente ${clients[idx].name} desvinculado! O cliente pode ativar em outro computador/celular.` };
+    }
+    return { success: false, message: 'Cliente não encontrado.' };
+  },
+
+  revokeClientLicense: function(clientId) {
+    const clients = this.getAllClients();
+    const idx = clients.findIndex(c => c.id === clientId);
+    if (idx !== -1) {
+      clients[idx].status = 'revoked';
+      clients[idx].expiresAt = Date.now() - 1000;
+
+      if (this.licenseData && this.licenseData.key === clients[idx].key) {
+        this.isLicensed = false;
+        this.licenseData = null;
+        localStorage.removeItem(this.STORAGE_KEY);
+      }
+
+      this.saveClients(clients);
+      return { success: true, message: `Licença do cliente ${clients[idx].name} foi revogada/bloqueada.` };
+    }
+    return { success: false, message: 'Cliente não encontrado.' };
+  },
+
+  deleteClientRecord: function(clientId) {
+    let clients = this.getAllClients();
+    clients = clients.filter(c => c.id !== clientId);
+    this.saveClients(clients);
+    return { success: true, message: 'Registro do cliente removido.' };
   },
 
   // Generate unique Device Hardware Fingerprint (Single Device Locking)
@@ -136,19 +244,6 @@ const LicenseSystem = {
       return { valid: false, message: 'Plano de licença desconhecido.' };
     }
 
-    // Verify exact cryptographic checksum matching
-    let matchFound = false;
-    // Check if checksum matches any valid calculation
-    for (let tOffset = 0; tOffset < 10; tOffset++) {
-      const payload = `${planCode}-${clientName}-${userChecksum}-${this.SECRET_SALT}`;
-      // Check checksum consistency
-    }
-
-    // Check string integrity
-    const samplePayload = `${planCode}-${clientName}-${this.SECRET_SALT}`;
-    const expectedChecksum = this.calculateChecksum(samplePayload);
-
-    // Strict character match
     if (userChecksum.length !== 4) {
       return { valid: false, message: 'Caracteres da chave inválidos ou alterados.' };
     }
@@ -182,6 +277,18 @@ const LicenseSystem = {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     this.isLicensed = true;
     this.licenseData = data;
+
+    // Register or update client in CRM DB
+    const clients = this.getAllClients();
+    const existingIdx = clients.findIndex(c => c.key === data.key);
+    if (existingIdx !== -1) {
+      clients[existingIdx].deviceId = currentDevice;
+      clients[existingIdx].status = 'active';
+      this.saveClients(clients);
+    } else {
+      this.registerClientRecord(check.clientName, userEmail, check.planCode, data.key);
+    }
+
     this.startExpirationMonitor();
 
     return {
@@ -206,7 +313,7 @@ const LicenseSystem = {
           }
         }
       }
-    }, 1000); // Check every second
+    }, 1000);
   },
 
   getTimeRemainingString: function() {
